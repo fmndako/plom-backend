@@ -1,0 +1,50 @@
+{
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js",
+    "dev": "nodemon src/app.js",
+    "lint": "eslint ./src",
+    "lint-fix": "eslint ./src --fix"
+  },
+  "dependencies": {
+    "app-module-path": "^2.2.0",
+    "bcrypt": "^5.0.0",
+    "dotenv": "^6.2.0",
+    "express": "^4.17.1",
+    "install": "^0.13.0",
+    "jsonwebtoken": "^8.5.1",
+    "lodash": "^4.17.15",
+    "mongoose": "^5.11.15",
+    "morgan": "^1.9.1",
+    "multer": "^1.4.2",
+    "node-mailjet": "^3.3.1",
+    "node-pre-gyp": "^0.17.0",
+    "paystack": "^2.0.1",
+    "request": "^2.88.0",
+    "require-all": "^3.0.0",
+    "validator": "^10.9.0"
+  },
+  "name": "aca_foundation",
+  "version": "1.0.0",
+  "description": "Start applying for grants ",
+  "main": "app.js",
+  "devDependencies": {
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
+    "nodemon": "^2.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/natterbasee/aca_backend.git"
+  },
+  "keywords": [
+    "food"
+  ],
+  "author": "Muhammad Ndako",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://gitlab.com/natterbasee/aca_backend/issues"
+  },
+  "homepage": "https://gitlab.com/natterbasee/aca_backend#README"
+}
