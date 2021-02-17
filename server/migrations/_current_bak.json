@@ -1,0 +1,367 @@
+{
+    "tables": {
+        "Loans": {
+            "tableName": "Loans",
+            "schema": {
+                "id": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.UUIDV1"
+                    },
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.UUID"
+                },
+                "type": {
+                    "allowNull": false,
+                    "field": "type",
+                    "seqType": "Sequelize.STRING"
+                },
+                "loanItem": {
+                    "field": "loanItem",
+                    "seqType": "Sequelize.STRING"
+                },
+                "amount": {
+                    "field": "amount",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "author": {
+                    "field": "author",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "other": {
+                    "field": "other",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "clearStatus": {
+                    "field": "clearStatus",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "notify": {
+                    "field": "notify",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "offset": {
+                    "field": "offset",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "dateTaken": {
+                    "field": "dateTaken",
+                    "seqType": "Sequelize.DATE"
+                },
+                "dateToRepay": {
+                    "field": "dateToRepay",
+                    "seqType": "Sequelize.DATE"
+                },
+                "dateCleared": {
+                    "field": "dateCleared",
+                    "seqType": "Sequelize.DATE"
+                },
+                "remarks": {
+                    "field": "remarks",
+                    "seqType": "Sequelize.STRING"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "field": "createdAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "allowNull": false,
+                    "field": "updatedAt",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
+        "Offsets": {
+            "tableName": "Offsets",
+            "schema": {
+                "id": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.UUIDV1"
+                    },
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.UUID"
+                },
+                "amount": {
+                    "field": "amount",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "date": {
+                    "field": "date",
+                    "seqType": "Sequelize.DATE"
+                },
+                "remarks": {
+                    "field": "remarks",
+                    "seqType": "Sequelize.STRING"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "field": "createdAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "allowNull": false,
+                    "field": "updatedAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "loanId": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "Loans",
+                        "key": "id"
+                    },
+                    "onDelete": "SET NULL",
+                    "onUpdate": "CASCADE",
+                    "field": "loanId",
+                    "seqType": "Sequelize.UUID"
+                }
+            },
+            "indexes": []
+        },
+        "Tokens": {
+            "tableName": "Tokens",
+            "schema": {
+                "id": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.UUIDV1"
+                    },
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.UUID"
+                },
+                "token": {
+                    "allowNull": false,
+                    "field": "token",
+                    "seqType": "Sequelize.STRING"
+                },
+                "type": {
+                    "field": "type",
+                    "seqType": "Sequelize.STRING"
+                },
+                "dateCreated": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.NOW"
+                    },
+                    "field": "dateCreated",
+                    "seqType": "Sequelize.DATE"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "field": "createdAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "allowNull": false,
+                    "field": "updatedAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "userId": {
+                    "allowNull": true,
+                    "references": {
+                        "model": "Users",
+                        "key": "id"
+                    },
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "field": "userId",
+                    "seqType": "Sequelize.UUID"
+                }
+            },
+            "indexes": []
+        },
+        "Users": {
+            "tableName": "Users",
+            "schema": {
+                "id": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.UUIDV1"
+                    },
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.UUID"
+                },
+                "email": {
+                    "field": "email",
+                    "seqType": "Sequelize.STRING"
+                },
+                "firstName": {
+                    "field": "firstName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "middleName": {
+                    "field": "middleName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "lastName": {
+                    "field": "lastName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "dateOfBirth": {
+                    "field": "dateOfBirth",
+                    "seqType": "Sequelize.DATE"
+                },
+                "username": {
+                    "field": "username",
+                    "seqType": "Sequelize.STRING"
+                },
+                "salutation": {
+                    "field": "salutation",
+                    "seqType": "Sequelize.STRING"
+                },
+                "isAdmin": {
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "isAdmin",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "isSuperadmin": {
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "isSuperadmin",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "deleted": {
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "deleted",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "dateDeleted": {
+                    "field": "dateDeleted",
+                    "seqType": "Sequelize.DATE"
+                },
+                "gender": {
+                    "field": "gender",
+                    "seqType": "Sequelize.STRING"
+                },
+                "address": {
+                    "field": "address",
+                    "seqType": "Sequelize.STRING"
+                },
+                "maritalStatus": {
+                    "field": "maritalStatus",
+                    "seqType": "Sequelize.STRING"
+                },
+                "acceptedTerms": {
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "acceptedTerms",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "phoneNumber": {
+                    "field": "phoneNumber",
+                    "seqType": "Sequelize.STRING"
+                },
+                "businessName": {
+                    "field": "businessName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "accountType": {
+                    "field": "accountType",
+                    "seqType": "Sequelize.STRING"
+                },
+                "organization": {
+                    "field": "organization",
+                    "seqType": "Sequelize.STRING"
+                },
+                "bussinessAddress": {
+                    "field": "bussinessAddress",
+                    "seqType": "Sequelize.STRING"
+                },
+                "bvn": {
+                    "field": "bvn",
+                    "seqType": "Sequelize.STRING"
+                },
+                "description": {
+                    "field": "description",
+                    "seqType": "Sequelize.STRING"
+                },
+                "designation": {
+                    "field": "designation",
+                    "seqType": "Sequelize.STRING"
+                },
+                "token": {
+                    "field": "token",
+                    "seqType": "Sequelize.STRING"
+                },
+                "tokenCreatedAt": {
+                    "field": "tokenCreatedAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "attemptCount": {
+                    "field": "attemptCount",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "timeLocked": {
+                    "field": "timeLocked",
+                    "seqType": "Sequelize.DATE"
+                },
+                "accountLocked": {
+                    "field": "accountLocked",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "loginMethod": {
+                    "defaultValue": {
+                        "value": "email"
+                    },
+                    "field": "loginMethod",
+                    "seqType": "Sequelize.STRING"
+                },
+                "status": {
+                    "defaultValue": {
+                        "value": "inactive"
+                    },
+                    "field": "status",
+                    "seqType": "Sequelize.STRING"
+                },
+                "isActive": {
+                    "defaultValue": {
+                        "value": 0
+                    },
+                    "field": "isActive",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "dateCreated": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.NOW"
+                    },
+                    "field": "dateCreated",
+                    "seqType": "Sequelize.DATE"
+                },
+                "lastLogin": {
+                    "field": "lastLogin",
+                    "seqType": "Sequelize.DATE"
+                },
+                "password": {
+                    "allowNULL": false,
+                    "field": "password",
+                    "seqType": "Sequelize.STRING"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "field": "createdAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "allowNull": false,
+                    "field": "updatedAt",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        }
+    },
+    "revision": 2
+}

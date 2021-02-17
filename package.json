@@ -1,5 +1,9 @@
 {
   "scripts": {
+    "db:makemigrations": "./node_modules/sequelize-auto-migrations/bin/makemigration.js",
+    "db:migrate": "sequelize db:migrate",
+    "db:create": "sequelize db:create",
+    "db:drop": "sequelize db:drop",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon src/app.js",
@@ -8,43 +12,54 @@
   },
   "dependencies": {
     "app-module-path": "^2.2.0",
+    "app-root-path": "^3.0.0",
+    "aws-sdk": "^2.771.0",
+    "axios": "^0.21.1",
     "bcrypt": "^5.0.0",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.19.0",
+    "crypto-js": "^4.0.0",
     "dotenv": "^6.2.0",
     "express": "^4.17.1",
+    "express-fileupload": "^1.1.10",
+    "express-handlebars": "^4.0.6",
+    "forwarded-host": "^1.0.0",
+    "geoip-lite": "^1.4.2",
+    "http-proxy": "^1.18.1",
     "install": "^0.13.0",
     "jsonwebtoken": "^8.5.1",
     "lodash": "^4.17.15",
-    "mongoose": "^5.11.15",
     "morgan": "^1.9.1",
     "multer": "^1.4.2",
+    "mysql2": "^2.2.5",
     "node-mailjet": "^3.3.1",
     "node-pre-gyp": "^0.17.0",
+    "nodemailer": "^6.4.14",
+    "nodemailer-ses-transport": "^1.5.1",
+    "onesignal-node": "^3.2.0",
     "paystack": "^2.0.1",
     "request": "^2.88.0",
     "require-all": "^3.0.0",
-    "validator": "^10.9.0"
+    "sequelize": "^6.3.5",
+    "sequelize-auto-migrations": "github:scimonster/sequelize-auto-migrations",
+    "sequelize-cli": "^6.2.0",
+    "socket.io": "^2.3.0",
+    "socket.io-client": "^2.3.1",
+    "validator": "^10.9.0",
+    "winston": "^3.3.3"
   },
-  "name": "aca_foundation",
-  "version": "1.0.0",
-  "description": "Start applying for grants ",
-  "main": "app.js",
   "devDependencies": {
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "nodemon": "^2.0.7"
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "babel-eslint": "^10.0.3",
+    "eslint": "^6.8.0",
+    "jest": "^25.1.0",
+    "nodemon": "^2.0.5",
+    "supertest": "^4.0.2"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://gitlab.com/natterbasee/aca_backend.git"
-  },
-  "keywords": [
-    "food"
-  ],
-  "author": "Muhammad Ndako",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://gitlab.com/natterbasee/aca_backend/issues"
-  },
-  "homepage": "https://gitlab.com/natterbasee/aca_backend#README"
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
 }

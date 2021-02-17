@@ -1,178 +1,257 @@
-const jwt = require('jsonwebtoken')
-const bcrypt = require('bcrypt')
-const authServices = require('./../services/auth')
-const mail = require('./../helper/email')
-const config = require('./../../config/index')
-const userService = require('../services/users')
 
-const saltRounds = 10
-const register = async (req, res) => {
-  const data = {
-    phone: req.body.phone,
-    password: req.body.password,
-    first_name: req.body.first_name,
-    middle_name: req.body.middle_name,
-    last_name: req.body.last_name,
-    email: req.body.email,
-    address: req.body.address
-  }
+'use strict';
+const db = require('../../server/models');
+const winston = require('../services/winston');
+const logger = new winston('User Management');
+const EmailService = require('../services/email');
+const OTPUtils = require('../../utilities/otp-verifcation');
+const appRoot = require('app-root-path');
+const defaultTemplates = require(appRoot + '/templates');
+const Handlebars = require('express-handlebars').create();
+const jwt = require('jsonwebtoken');
+const { returnOnlyArrayProperties } = require('../../utilities/helpers');
+let signupEmailTemplate = defaultTemplates.signup;
+let passwordEmailTemplate = defaultTemplates.password;
+const frontendUrl = process.env.FRONT_END_URL;
+const UserService = require('../services/users');
 
-  try {
-    if (!data.phone) {
-      res.send({ error: 'Enter a phone number' })
 
-      return
+class UserController {
+    async signupAccount (req, res){
+        try {
+            let {accountNumber, password} = req.body;
+            if(!accountNumber || !password) return res.processError(400, 'Account number and password cannot be empty');
+            let acctIsValid = /^\d+$/.test(accountNumber);
+            if (accountNumber.length !== 10 || !acctIsValid) return res.processError(400, 'Invalid account number' );
+            let valid = await checkPassword(password);
+            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            let users = await UserService.getUsers({accountNumber:accountNumber});
+            if (users.length > 0) return res.processError(400, 'User with account number already exist');
+            let details = await RequestService.getAccountDetails(accountNumber, true);
+            if (!details) throw Error();
+            details = details.accountDetails[0];
+            let body = {accountNumber, password};
+            body.email = details.email;
+            if(details.accountName){
+                let fullName = details.accountName.split(' ');
+                if (fullName.length > 1 ) {
+                    body.firstName = fullName[0];
+                    body.lastName = fullName[1]; 
+                } else body.firstName = details.accountName;
+            }
+            body.phoneNumber = details.phoneNumber;
+            body.loginMethod = 'accountNumber';
+            req.body = body;
+            this.signup(req, res);
+        } catch (error) {
+            res.processError(400, 'Error registering with account number');
+        }
     }
-
-    if (!data.password || data.password.length < 6) {
-      res.send({ error: 'Password must be over 5 characters' })
-
-      return
+     
+    async signup (req, res) {
+        try {
+            let {email, password, firstName, lastName, accountNumber, loginMethod} = req.body;
+            if (!email || !password) return res.processError(400, 'Invalid request, all fields are required');
+            if (!loginMethod && ( !firstName || !lastName )) return res.processError(400, 'Invalid request, all fields are required');
+            let valid = await checkPassword(password);
+            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            
+            let body = {email, password, firstName, acceptedTerms:true, lastName, accountNumber, loginMethod, phoneNumber : loginMethod ? req.body.phoneNumber : ''};
+            if (!loginMethod){
+                let users = await UserService.getUsers({email:email});
+                if (users.length > 0) return res.processError(400, 'User with email already exist');
+            }
+            body.status = 'inactive';
+            let user = await UserService.createUser(body);
+            if (!user) return res.processError(400, 'Error creating user');
+            let otp = await OTPUtils.saveOTP(user, 'email', 'true');
+            let url = frontendUrl;
+            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            _sendEmailVerificationMail(user, url, 'Email Verification');
+            // user.url = url;
+            logger.success('Sign up', {userId: user.id});
+            return res.status(201).send(user);
+        } catch (error) {
+            res.processError(400, 'Error creating user', error);
+        }
     }
-
-    if (!data.first_name) {
-      res.send({ error: 'Enter a name' })
-
-      return
+    async login (req, res ) {
+        try {
+            const { username, password} = req.body;
+            if(!username || !password) return res.processError(400, 'Enter both user name and password');
+            let user;
+            user = await UserService.verifyUser(username, password);
+            if (!user) {
+                return res.processError(404, 'Invalid email or password');
+            }
+            let token = jwt.sign({id: user.id}, process.env.JWT_KEY );
+            user.token = token;
+            user.tokenCreatedAt = new Date();
+            await user.save();
+            user = returnOnlyArrayProperties(user, db.attributes.user, true);
+            logger.success('Log in', {userId: user.id});
+            res.send({ user, token });
+        } catch (error) {
+            res.processError(400, error);
+        }     
     }
-
-    if (!data.last_name) {
-      res.send({ error: 'Last name can not be empty' })
-
-      return
+    async logout (req, res) {
+        try {
+            req.user.token = '';
+            await req.user.save();
+            logger.success('Log out', {userId: req.user.id});
+            res.send({detail: 'Logout successful'});
+        } catch (error) {
+            res.processError(400, error);
+        }
+    }    
+    // async requestEmailVerificationOtp (req, res){
+    //     try {
+    //         let user = await UserService.getUser(req.user.id);
+    //         let otp = await OTPUtils.saveOTP(user, 'email');
+    //         _sendEmailVerificationMail(user, otp, 'email');
+    //         res.send({otp});
+    //     } catch (error) {
+    //         res.processError(400, error);
+    //     }
+    // }
+    async requestEmailVerificationLink(req, res){
+        try {
+            let user = await UserService.getUser(req.user.id);
+            if (!user) return res.processError(400, 'User does not exist');
+            let otp = await OTPUtils.saveOTP(user, 'email', true);
+            let url = frontendUrl;
+            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            _sendEmailVerificationMail(user, url, 'Email Verification');
+            user.save();
+            logger.success('Request email verification', {userId: req.user.id});
+            res.send({detail: 'Email verification link sent' + url});
+        } catch (error) {
+            res.processError(400, 'Error requesting email verification');
+        }
     }
-
-    if (!data.email || data.email.search('@') === -1) {
-      res.send({ error: 'Enter a valid e-mail address' })
-
-      return
+    async verifyEmailLink (req, res){
+        try {
+            let user = await UserService.getUser(req.params.userId);
+            if (!user) return res.processError(400, 'user does not exist');
+            let type = 'email';
+            if (req.params.verifyEmail === 'passwordReset') type = 'password-reset';
+            return await OTPUtils.verifyOTP(user, type, res, req.params.otp);
+        } catch (error) {
+            res.processError(400, error);
+        }
     }
-
-    if (!data.address) {
-      res.send({ error: 'Enter an address' })
-
-      return
+    // async verifyEmailOtp (req, res){
+    //     try {
+    //         let email = req.body.email ? req.body.email : req.user.email;
+    //         let otp = req.body.otp;
+    //         if(!email || !otp) return res.processError(400, 'Bad request');
+    //         let user = await UserService.getUsers({email:email});
+    //         if (user && user.length < 1) return res.processError(400, 'user does not exist');
+    //         user = user[0];
+    //         let verified = await OTPUtils.verifyOTP(otp, user, 'email');
+    //         if (verified[0] === 200) return res.send(verified[1]);
+    //         return res.processError(verified[0], verified[1]);
+    //     } catch (error) {
+    //         res.processError(400, error);
+    //     }
+    // }
+    async changePassword (req, res){
+        try {
+            let oldPassword = req.body.oldPassword;
+            let newPassword = req.body.newPassword;
+            if (!oldPassword || !newPassword) return res.processError(400, 'All fields are required');
+            let results = await req.user.checkPassword(oldPassword);
+            if (!results) return res.processError(400, 'Invalid password');
+            let valid = await checkPassword(newPassword);
+            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            req.user.setNewPassword(newPassword);
+            logger.success('Change password', {userId: req.user.id});
+            res.send({detail: 'Successfully change password'});
+        } catch (error) {
+            res.processError(400, 'Error changing password');
+        }
     }
-
-    const salt = await bcrypt.genSalt(saltRounds)
-    const hash = await bcrypt.hash(data.password, salt)
-    const email = data.email.toLowerCase()
-    const result = await authServices.searchUser(email)
-
-    if (result) {
-      return res.status(400).send({ error: 'Email already exist' })
+    async requestPasswordReset (req, res){
+        try {
+            let email = req.body.email ? req.body.email : req.user.email;
+            if(!email) return res.processError(400, 'Enter a valid email request');
+            let user = await UserService.getUsers({email:email});
+            if (user && user.length < 1) return res.processError(400, 'user does not exist');
+            user = user[0];
+            let url = frontendUrl;
+            let otp = await OTPUtils.saveOTP(user, 'password-reset', true);
+            url = `${url}/passwordReset?ref=${user.id}&token=${otp}`;
+            _sendEmailVerificationMail(user, url, 'password-reset');
+            user = user.toJSON(); 
+            user.otp = otp;
+            logger.success('Request password reset', {userId: user.id});
+            res.send({detail: 'Password reset link sent to your mail'});
+        } catch (error) {
+            res.processError(400, error);
+        }
     }
+    // async resetPassword (req, res){
+    //     try {
+    //         let otp = req.body.otp;
+    //         let id = req.body.id;
+    //         if (!id || !otp) return res.processError(400, 'bad request');
+    //         let user = await UserService.getUser(id);
+    //         let verified = await OTPUtils.verifyOTP(otp, user, 'password-reset');
+    //         if (verified[0] === 200) res.send({id, message: verified[1]});
+    //         return res.processError(verified[0], verified[1]);
+    //     } catch (error) {
+    //         res.processError(400, error);
+    //     }
+    // }
+    async setPassword (req, res){
+        try {
+            let password = req.body.newPassword;
+            let valid = checkPassword(password);
+            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            let id = req.body.userId;
+            if(!password || !id) throw Error();
+            let user = await UserService.getUser(id);
+            if (!user ) return res.processError(400, 'User does not exist');
+            user.verifyOtp = await OTPUtils.getOtps({userId: id});
+            let userOtp = user.verifyOtp.filter(o => o.type === 'password-reset');
+            if (userOtp.length < 0 && !userOtp.verified) return res.processError(400, 'Invalid request, Error setting new password');
+            await user.setNewPassword(password);
+            return res.send({detail: 'New password successfully set'});
+        } catch (error) {
+            res.processError(400, 'Error setting new password');
+        }
+    }
+    
+}
+function checkPassword(str){
+    let re = /^(?=.*\d)(?=.*[!@#$%^'"&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
+    return re.test(str);
+}
+async function  _sendEmailVerificationMail (user, url, subject, otp){
+    try {
+        let variables = {
+            firstName: user.firstName,
+            link: url,
+            otp: otp,
+            frontendUrl
+        };
+        let mailTemplate;
+        if(subject.toLowerCase().includes('email')){
+            mailTemplate = Handlebars._compileTemplate(signupEmailTemplate);
+        } else {
+            mailTemplate = Handlebars._compileTemplate(passwordEmailTemplate);
 
-    data.password = hash
-    await authServices.register(data)
-
-    res.send({ result: 'Registration successful' })
-  } catch (error) {
-    res.status(500).send({ error: 'unable to register' })
-  }
+        }
+        let mailContent = mailTemplate(variables);
+            
+        let payload = {
+            subject: subject
+        };
+        return EmailService.sendEmail(user.email, payload, mailContent );
+    } catch (error) {
+        logger.error(error);
+    }
 }
 
-const resetPassword = async (req, res) => {
-  const data = {
-    email: req.body.email,
-  }
-  try {
-    if (!data.email || data.email.search('@') === -1) {
-      return res.send({ error: 'Enter a valid e-mail address' })
-    }
-
-    const result = await authServices.resetPassword(data)
-
-    if (!result) {
-      res.send({ error: 'Account does not exist' })
-
-      return
-    }
-
-    const token = jwt.sign({ id: result._id }, config.tokenSecret)
-
-    await userService.updateUser({ _id: result._id }, { passwordToken: token })
-
-    await mail.sendMail(process.env.SENDER_EMAIL, process.env.EMAIL_SENDER_NAME,
-      result.first_name, result.email, token)
-
-    res.send({ result: `a link has been sent to ${result.email}` })
-  } catch (error) {
-    console.error(error)
-
-    return res.status(400).send({ error: 'Unable to reset your password' })
-  }
-}
-
-
-const newPassword = async (req, res) => {
-  const { token, password } = req.body
-
-  try {
-    const tokenWasGeneratedByServer = await userService.searchUser({ passwordToken: token })
-
-    if (!tokenWasGeneratedByServer) {
-      return res.status(400).send({ message: 'Invalid token provided' })
-    }
-
-    const payload = jwt.verify(token, config.tokenSecret)
-
-    if (!payload) {
-      return res.status(400).send({ error: 'Can not reset password' })
-    }
-
-    const Id = payload.id
-    const salt = await bcrypt.genSalt(saltRounds)
-    const hashedPassword = await bcrypt.hash(password, salt)
-
-    await authServices.update({ _id: Id }, { password: hashedPassword, passwordToken: '' })
-    res.send({ result: 'Your password has been successfully updated' })
-  } catch (error) {
-    console.error({ error })
-
-    return res.status(400).send({ error: 'Can not reset password' })
-  }
-}
-
-const login = async (req, res) => {
-  const data = {
-    email: req.body.email
-  }
-  try {
-    const result = await authServices.login(data)
-
-    if (!result) {
-      res.send({ error: 'Invalid email or password' })
-
-      return
-    }
-
-    const verifiedPassword = await bcrypt.compare(req.body.password, result.password)
-
-    if (!verifiedPassword) {
-      res.status(400).send({ error: 'Invalid email or password' })
-
-      return
-    }
-
-    const payload = {
-      id: result._id,
-      isAdmin: result.isAdmin
-    }
-    const token = jwt.sign(payload, config.tokenSecret)
-
-    res.send({ token })
-  } catch (error) {
-    console.error({ error })
-
-    return res.status(400).send({ error: 'Error occurred when logging in' })
-  }
-}
-
-
-module.exports = {
-  register,
-  resetPassword,
-  newPassword,
-  login
-}
+module.exports = new UserController();
