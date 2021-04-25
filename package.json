@@ -2,12 +2,13 @@
   "scripts": {
     "db:makemigrations": "./node_modules/sequelize-auto-migrations/bin/makemigration.js",
     "db:migrate": "sequelize db:migrate",
+    "db:migrate:undo": "sequelize db:migrate:undo",
     "db:create": "sequelize db:create",
     "db:drop": "sequelize db:drop",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon src/app.js",
-    "lint": "eslint ./src",
+    "pretest": "eslint --ignore-path .gitignore . '--fix'",
     "lint-fix": "eslint ./src --fix"
   },
   "dependencies": {

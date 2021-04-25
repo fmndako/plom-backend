@@ -12,42 +12,11 @@ const jwt = require('jsonwebtoken');
 const { returnOnlyArrayProperties } = require('../../utilities/helpers');
 let signupEmailTemplate = defaultTemplates.signup;
 let passwordEmailTemplate = defaultTemplates.password;
-const frontendUrl = process.env.FRONT_END_URL;
+const frontendUrl = process.env.FRONTEND_URL;
 const UserService = require('../services/users');
 
 
 class UserController {
-    async signupAccount (req, res){
-        try {
-            let {accountNumber, password} = req.body;
-            if(!accountNumber || !password) return res.processError(400, 'Account number and password cannot be empty');
-            let acctIsValid = /^\d+$/.test(accountNumber);
-            if (accountNumber.length !== 10 || !acctIsValid) return res.processError(400, 'Invalid account number' );
-            let valid = await checkPassword(password);
-            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
-            let users = await UserService.getUsers({accountNumber:accountNumber});
-            if (users.length > 0) return res.processError(400, 'User with account number already exist');
-            let details = await RequestService.getAccountDetails(accountNumber, true);
-            if (!details) throw Error();
-            details = details.accountDetails[0];
-            let body = {accountNumber, password};
-            body.email = details.email;
-            if(details.accountName){
-                let fullName = details.accountName.split(' ');
-                if (fullName.length > 1 ) {
-                    body.firstName = fullName[0];
-                    body.lastName = fullName[1]; 
-                } else body.firstName = details.accountName;
-            }
-            body.phoneNumber = details.phoneNumber;
-            body.loginMethod = 'accountNumber';
-            req.body = body;
-            this.signup(req, res);
-        } catch (error) {
-            res.processError(400, 'Error registering with account number');
-        }
-    }
-     
     async signup (req, res) {
         try {
             let {email, password, firstName, lastName, accountNumber, loginMethod} = req.body;
@@ -121,7 +90,7 @@ class UserController {
             if (!user) return res.processError(400, 'User does not exist');
             let otp = await OTPUtils.saveOTP(user, 'email', true);
             let url = frontendUrl;
-            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            url = `${url}/verifyEmail/${user.id}/${otp}`;
             _sendEmailVerificationMail(user, url, 'Email Verification');
             user.save();
             logger.success('Request email verification', {userId: req.user.id});

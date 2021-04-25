@@ -17,6 +17,36 @@
                     "field": "type",
                     "seqType": "Sequelize.STRING"
                 },
+                "lender": {
+                    "foreignKey": true,
+                    "references": {
+                        "model": "Users",
+                        "key": "id"
+                    },
+                    "field": "lender",
+                    "seqType": "Sequelize.UUID"
+                },
+                "lenderUserName": {
+                    "field": "lenderUserName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "lenderUserPhoneNumbers": {
+                    "field": "lenderUserPhoneNumbers",
+                    "seqType": "Sequelize.JSON"
+                },
+                "lenderUserEmail": {
+                    "field": "lenderUserEmail",
+                    "seqType": "Sequelize.JSON"
+                },
+                "userId": {
+                    "foreignKey": true,
+                    "references": {
+                        "model": "Users",
+                        "key": "id"
+                    },
+                    "field": "userId",
+                    "seqType": "Sequelize.UUID"
+                },
                 "loanItem": {
                     "field": "loanItem",
                     "seqType": "Sequelize.STRING"
@@ -25,24 +55,12 @@
                     "field": "amount",
                     "seqType": "Sequelize.INTEGER"
                 },
-                "author": {
-                    "field": "author",
-                    "seqType": "Sequelize.INTEGER"
-                },
-                "other": {
-                    "field": "other",
-                    "seqType": "Sequelize.INTEGER"
-                },
-                "clearStatus": {
-                    "field": "clearStatus",
+                "cleared": {
+                    "field": "cleared",
                     "seqType": "Sequelize.BOOLEAN"
                 },
                 "notify": {
                     "field": "notify",
-                    "seqType": "Sequelize.BOOLEAN"
-                },
-                "offset": {
-                    "field": "offset",
                     "seqType": "Sequelize.BOOLEAN"
                 },
                 "dateTaken": {
@@ -57,9 +75,20 @@
                     "field": "dateCleared",
                     "seqType": "Sequelize.DATE"
                 },
+                "repaymentOptions": {
+                    "field": "repaymentOptions",
+                    "seqType": "Sequelize.STRING"
+                },
                 "remarks": {
                     "field": "remarks",
                     "seqType": "Sequelize.STRING"
+                },
+                "deleted": {
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "deleted",
+                    "seqType": "Sequelize.BOOLEAN"
                 },
                 "createdAt": {
                     "allowNull": false,
@@ -86,6 +115,18 @@
                     "field": "id",
                     "seqType": "Sequelize.UUID"
                 },
+                "loanId": {
+                    "foreignKey": true,
+                    "references": {
+                        "model": "Loans",
+                        "key": "id"
+                    },
+                    "field": "loanId",
+                    "allowNull": true,
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "seqType": "Sequelize.UUID"
+                },
                 "amount": {
                     "field": "amount",
                     "seqType": "Sequelize.INTEGER"
@@ -107,17 +148,6 @@
                     "allowNull": false,
                     "field": "updatedAt",
                     "seqType": "Sequelize.DATE"
-                },
-                "loanId": {
-                    "allowNull": true,
-                    "references": {
-                        "model": "Loans",
-                        "key": "id"
-                    },
-                    "onDelete": "SET NULL",
-                    "onUpdate": "CASCADE",
-                    "field": "loanId",
-                    "seqType": "Sequelize.UUID"
                 }
             },
             "indexes": []
@@ -179,6 +209,87 @@
             },
             "indexes": []
         },
+        "UserConfigs": {
+            "tableName": "UserConfigs",
+            "schema": {
+                "id": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.UUIDV1"
+                    },
+                    "primaryKey": true,
+                    "field": "id",
+                    "seqType": "Sequelize.UUID"
+                },
+                "userId": {
+                    "foreignKey": true,
+                    "references": {
+                        "model": "Users",
+                        "key": "id"
+                    },
+                    "field": "userId",
+                    "allowNull": true,
+                    "onDelete": "CASCADE",
+                    "onUpdate": "CASCADE",
+                    "seqType": "Sequelize.UUID"
+                },
+                "reminderDays": {
+                    "defaultValue": {
+                        "value": 7
+                    },
+                    "field": "reminderDays",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "currency": {
+                    "field": "currency",
+                    "seqType": "Sequelize.STRING"
+                },
+                "notification": {
+                    "defaultValue": {
+                        "value": true
+                    },
+                    "field": "notification",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "guarantorName": {
+                    "field": "guarantorName",
+                    "seqType": "Sequelize.STRING"
+                },
+                "guarantorPhoneNumbers": {
+                    "field": "guarantorPhoneNumbers",
+                    "seqType": "Sequelize.JSON"
+                },
+                "guarantorEmails": {
+                    "field": "guarantorEmails",
+                    "seqType": "Sequelize.JSON"
+                },
+                "acceptedInactiveDays": {
+                    "defaultValue": {
+                        "value": 30
+                    },
+                    "field": "acceptedInactiveDays",
+                    "seqType": "Sequelize.INTEGER"
+                },
+                "sendDetailsToGuarantor": {
+                    "defaultValue": {
+                        "value": true
+                    },
+                    "field": "sendDetailsToGuarantor",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
+                "createdAt": {
+                    "allowNull": false,
+                    "field": "createdAt",
+                    "seqType": "Sequelize.DATE"
+                },
+                "updatedAt": {
+                    "allowNull": false,
+                    "field": "updatedAt",
+                    "seqType": "Sequelize.DATE"
+                }
+            },
+            "indexes": []
+        },
         "Users": {
             "tableName": "Users",
             "schema": {
@@ -198,6 +309,10 @@
                 "firstName": {
                     "field": "firstName",
                     "seqType": "Sequelize.STRING"
+                },
+                "AKAs": {
+                    "field": "AKAs",
+                    "seqType": "Sequelize.JSON"
                 },
                 "middleName": {
                     "field": "middleName",
@@ -348,6 +463,10 @@
                     "field": "lastLogin",
                     "seqType": "Sequelize.DATE"
                 },
+                "self": {
+                    "field": "self",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
                 "password": {
                     "allowNULL": false,
                     "field": "password",
@@ -367,5 +486,5 @@
             "indexes": []
         }
     },
-    "revision": 3
+    "revision": 1
 }

@@ -9,7 +9,6 @@ const isAuthenticated = require('../middleware/isAuthenticated');
 
 apiRouter.use('/auth', auth);
 apiRouter.use('/users', isAuthenticated, users);
-// apiRouter.use('/users', isAuthenticated, users);
 // // apiRouter.use('/admin', isAdmin, admin);/
 
 

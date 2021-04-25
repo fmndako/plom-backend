@@ -5,98 +5,23 @@ var Sequelize = require('sequelize');
 /**
  * Actions summary:
  *
- * createTable "Loans", deps: []
  * createTable "Users", deps: []
+ * createTable "Loans", deps: [Users, Users]
  * createTable "Offsets", deps: [Loans]
  * createTable "Tokens", deps: [Users]
+ * createTable "UserConfigs", deps: [Users]
  *
  **/
 
 var info = {
     "revision": 1,
     "name": "noname",
-    "created": "2021-02-17T22:53:23.802Z",
+    "created": "2021-04-25T10:28:37.083Z",
     "comment": ""
 };
 
 var migrationCommands = function(transaction) {
     return [{
-            fn: "createTable",
-            params: [
-                "Loans",
-                {
-                    "id": {
-                        "type": Sequelize.UUID,
-                        "field": "id",
-                        "primaryKey": true,
-                        "defaultValue": Sequelize.UUIDV1
-                    },
-                    "type": {
-                        "type": Sequelize.STRING,
-                        "field": "type",
-                        "allowNull": false
-                    },
-                    "loanItem": {
-                        "type": Sequelize.STRING,
-                        "field": "loanItem"
-                    },
-                    "amount": {
-                        "type": Sequelize.INTEGER,
-                        "field": "amount"
-                    },
-                    "author": {
-                        "type": Sequelize.INTEGER,
-                        "field": "author"
-                    },
-                    "other": {
-                        "type": Sequelize.INTEGER,
-                        "field": "other"
-                    },
-                    "clearStatus": {
-                        "type": Sequelize.BOOLEAN,
-                        "field": "clearStatus"
-                    },
-                    "notify": {
-                        "type": Sequelize.BOOLEAN,
-                        "field": "notify"
-                    },
-                    "offset": {
-                        "type": Sequelize.BOOLEAN,
-                        "field": "offset"
-                    },
-                    "dateTaken": {
-                        "type": Sequelize.DATE,
-                        "field": "dateTaken"
-                    },
-                    "dateToRepay": {
-                        "type": Sequelize.DATE,
-                        "field": "dateToRepay"
-                    },
-                    "dateCleared": {
-                        "type": Sequelize.DATE,
-                        "field": "dateCleared"
-                    },
-                    "remarks": {
-                        "type": Sequelize.STRING,
-                        "field": "remarks"
-                    },
-                    "createdAt": {
-                        "type": Sequelize.DATE,
-                        "field": "createdAt",
-                        "allowNull": false
-                    },
-                    "updatedAt": {
-                        "type": Sequelize.DATE,
-                        "field": "updatedAt",
-                        "allowNull": false
-                    }
-                },
-                {
-                    "transaction": transaction
-                }
-            ]
-        },
-        {
             fn: "createTable",
             params: [
                 "Users",
@@ -114,6 +39,10 @@ var migrationCommands = function(transaction) {
                     "firstName": {
                         "type": Sequelize.STRING,
                         "field": "firstName"
+                    },
+                    "AKAs": {
+                        "type": Sequelize.JSON,
+                        "field": "AKAs"
                     },
                     "middleName": {
                         "type": Sequelize.STRING,
@@ -247,10 +176,117 @@ var migrationCommands = function(transaction) {
                         "type": Sequelize.DATE,
                         "field": "lastLogin"
                     },
+                    "self": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "self"
+                    },
                     "password": {
                         "type": Sequelize.STRING,
                         "field": "password",
                         "allowNULL": false
+                    },
+                    "createdAt": {
+                        "type": Sequelize.DATE,
+                        "field": "createdAt",
+                        "allowNull": false
+                    },
+                    "updatedAt": {
+                        "type": Sequelize.DATE,
+                        "field": "updatedAt",
+                        "allowNull": false
+                    }
+                },
+                {
+                    "transaction": transaction
+                }
+            ]
+        },
+        {
+            fn: "createTable",
+            params: [
+                "Loans",
+                {
+                    "id": {
+                        "type": Sequelize.UUID,
+                        "field": "id",
+                        "primaryKey": true,
+                        "defaultValue": Sequelize.UUIDV1
+                    },
+                    "type": {
+                        "type": Sequelize.STRING,
+                        "field": "type",
+                        "allowNull": false
+                    },
+                    "lender": {
+                        "type": Sequelize.UUID,
+                        "field": "lender",
+                        "references": {
+                            "model": "Users",
+                            "key": "id"
+                        },
+                        "foreignKey": true
+                    },
+                    "lenderUserName": {
+                        "type": Sequelize.STRING,
+                        "field": "lenderUserName"
+                    },
+                    "lenderUserPhoneNumbers": {
+                        "type": Sequelize.JSON,
+                        "field": "lenderUserPhoneNumbers"
+                    },
+                    "lenderUserEmail": {
+                        "type": Sequelize.JSON,
+                        "field": "lenderUserEmail"
+                    },
+                    "userId": {
+                        "type": Sequelize.UUID,
+                        "field": "userId",
+                        "references": {
+                            "model": "Users",
+                            "key": "id"
+                        },
+                        "foreignKey": true
+                    },
+                    "loanItem": {
+                        "type": Sequelize.STRING,
+                        "field": "loanItem"
+                    },
+                    "amount": {
+                        "type": Sequelize.INTEGER,
+                        "field": "amount"
+                    },
+                    "cleared": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "cleared"
+                    },
+                    "notify": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "notify"
+                    },
+                    "dateTaken": {
+                        "type": Sequelize.DATE,
+                        "field": "dateTaken"
+                    },
+                    "dateToRepay": {
+                        "type": Sequelize.DATE,
+                        "field": "dateToRepay"
+                    },
+                    "dateCleared": {
+                        "type": Sequelize.DATE,
+                        "field": "dateCleared"
+                    },
+                    "repaymentOptions": {
+                        "type": Sequelize.STRING,
+                        "field": "repaymentOptions"
+                    },
+                    "remarks": {
+                        "type": Sequelize.STRING,
+                        "field": "remarks"
+                    },
+                    "deleted": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "deleted",
+                        "defaultValue": false
                     },
                     "createdAt": {
                         "type": Sequelize.DATE,
@@ -279,6 +315,18 @@ var migrationCommands = function(transaction) {
                         "primaryKey": true,
                         "defaultValue": Sequelize.UUIDV1
                     },
+                    "loanId": {
+                        "type": Sequelize.UUID,
+                        "onUpdate": "CASCADE",
+                        "onDelete": "CASCADE",
+                        "allowNull": true,
+                        "field": "loanId",
+                        "references": {
+                            "model": "Loans",
+                            "key": "id"
+                        },
+                        "foreignKey": true
+                    },
                     "amount": {
                         "type": Sequelize.INTEGER,
                         "field": "amount"
@@ -300,17 +348,6 @@ var migrationCommands = function(transaction) {
                         "type": Sequelize.DATE,
                         "field": "updatedAt",
                         "allowNull": false
-                    },
-                    "loanId": {
-                        "type": Sequelize.UUID,
-                        "field": "loanId",
-                        "onUpdate": "CASCADE",
-                        "onDelete": "SET NULL",
-                        "references": {
-                            "model": "Loans",
-                            "key": "id"
-                        },
-                        "allowNull": true
                     }
                 },
                 {
@@ -333,6 +370,14 @@ var migrationCommands = function(transaction) {
                         "type": Sequelize.STRING,
                         "field": "token",
                         "allowNull": false
+                    },
+                    "type": {
+                        "type": Sequelize.STRING,
+                        "field": "type"
+                    },
+                    "verified": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "verified"
                     },
                     "dateCreated": {
                         "type": Sequelize.DATE,
@@ -365,6 +410,81 @@ var migrationCommands = function(transaction) {
                     "transaction": transaction
                 }
             ]
+        },
+        {
+            fn: "createTable",
+            params: [
+                "UserConfigs",
+                {
+                    "id": {
+                        "type": Sequelize.UUID,
+                        "field": "id",
+                        "primaryKey": true,
+                        "defaultValue": Sequelize.UUIDV1
+                    },
+                    "userId": {
+                        "type": Sequelize.UUID,
+                        "onUpdate": "CASCADE",
+                        "onDelete": "CASCADE",
+                        "allowNull": true,
+                        "field": "userId",
+                        "references": {
+                            "model": "Users",
+                            "key": "id"
+                        },
+                        "foreignKey": true
+                    },
+                    "reminderDays": {
+                        "type": Sequelize.INTEGER,
+                        "field": "reminderDays",
+                        "defaultValue": 7
+                    },
+                    "currency": {
+                        "type": Sequelize.STRING,
+                        "field": "currency"
+                    },
+                    "notification": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "notification",
+                        "defaultValue": true
+                    },
+                    "guarantorName": {
+                        "type": Sequelize.STRING,
+                        "field": "guarantorName"
+                    },
+                    "guarantorPhoneNumbers": {
+                        "type": Sequelize.JSON,
+                        "field": "guarantorPhoneNumbers"
+                    },
+                    "guarantorEmails": {
+                        "type": Sequelize.JSON,
+                        "field": "guarantorEmails"
+                    },
+                    "acceptedInactiveDays": {
+                        "type": Sequelize.INTEGER,
+                        "field": "acceptedInactiveDays",
+                        "defaultValue": 30
+                    },
+                    "sendDetailsToGuarantor": {
+                        "type": Sequelize.BOOLEAN,
+                        "field": "sendDetailsToGuarantor",
+                        "defaultValue": true
+                    },
+                    "createdAt": {
+                        "type": Sequelize.DATE,
+                        "field": "createdAt",
+                        "allowNull": false
+                    },
+                    "updatedAt": {
+                        "type": Sequelize.DATE,
+                        "field": "updatedAt",
+                        "allowNull": false
+                    }
+                },
+                {
+                    "transaction": transaction
+                }
+            ]
         }
     ];
 };
@@ -384,6 +504,12 @@ var rollbackCommands = function(transaction) {
         {
             fn: "dropTable",
             params: ["Tokens", {
+                transaction: transaction
+            }]
+        },
+        {
+            fn: "dropTable",
+            params: ["UserConfigs", {
                 transaction: transaction
             }]
         },

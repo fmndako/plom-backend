@@ -5,7 +5,6 @@ const isAuthenticated = require('../middleware/isAuthenticated');
 const router = express.Router();
 
 router.post('/register', AuthController.signup.bind(AuthController));
-router.post('/register/accountNumber', AuthController.signupAccount.bind(AuthController));
 router.post('/login', AuthController.login);
 router.post('/logout', isAuthenticated, AuthController.logout);
 // router.post('/requestVerification/:userId', AuthController.requestEmailVerificationDirect);

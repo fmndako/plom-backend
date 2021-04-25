@@ -7,10 +7,7 @@ const logger = new winston('Email Service');
 let options = { 
     host: process.env.MAILING_HOST,
     port: process.env.MAILING_PORT,
-    secure: false,
-    tls: {
-        rejectUnauthorized: false
-    },
+   
 
 };
 
@@ -18,6 +15,11 @@ if (process.env.USE_MAILING_AUTH === 'true') {
     options.auth =  {
         user: process.env.MAILING_USERNAME,
         pass: process.env.MAILING_PASSWORD
+    };
+} else {
+    options.secure = false,
+    options.tls = {
+        rejectUnauthorized: false
     };
 }
 
