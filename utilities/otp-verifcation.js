@@ -50,6 +50,7 @@ class OTPVerification {
             logger.error('Error saving OTP', {error:e});
         }
     }
+    
     async verifyOTP (user, type, res, otp) {
         try {
             user.verifyOtp = await Otp.findAll({where: {userId : user.id}});
