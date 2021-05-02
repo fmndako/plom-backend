@@ -10,7 +10,7 @@ router.post('/logout', isAuthenticated, AuthController.logout);
 // router.post('/requestVerification/:userId', AuthController.requestEmailVerificationDirect);
 router.post('/requestVerification', isAuthenticated, AuthController.requestEmailVerificationLink);
 // router.post('/verifyEmail', AuthController.verifyEmail);
-router.post('/:verifyEmail/:userId/:otp', AuthController.verifyEmailLink);
+router.get('/:verifyEmail/:userId/:otp', AuthController.verifyEmailLink);
 router.post('/changePassword', isAuthenticated, AuthController.changePassword);
 router.post('/requestPasswordReset', AuthController.requestPasswordReset);
 // router.post('/resetPassword', AuthController.resetPassword);

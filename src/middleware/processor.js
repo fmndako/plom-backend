@@ -61,7 +61,7 @@ const reqProcessor = (req, res, next) => {
         };
         next();      
     } catch (error) {
-        res.processError(401, 'Error processing request');
+        res.processError(400, 'Error processing request');
     }
 
 };
