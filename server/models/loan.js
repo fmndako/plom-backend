@@ -19,9 +19,6 @@ module.exports = (sequelize, DataTypes) => {
                 key: 'id'
             }
         },
-        lenderUserName: DataTypes.STRING,
-        lenderUserPhoneNumbers: DataTypes.JSON,
-        lenderUserEmail: DataTypes.JSON,
         userId: {
             type: DataTypes.UUID,
             foreignKey: true,

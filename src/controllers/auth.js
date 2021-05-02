@@ -19,18 +19,14 @@ const UserService = require('../services/users');
 class UserController {
     async signup (req, res) {
         try {
-            let {email, password, firstName, lastName, accountNumber, loginMethod} = req.body;
-            if (!email || !password) return res.processError(400, 'Invalid request, all fields are required');
-            if (!loginMethod && ( !firstName || !lastName )) return res.processError(400, 'Invalid request, all fields are required');
+            let {email, password, firstName, lastName, phoneNumber} = req.body;
+            if (!email || !password || !firstName || !lastName || !phoneNumber) return res.processError(400, 'Invalid request, all fields are required');
             let valid = await checkPassword(password);
             if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
-            
-            let body = {email, password, firstName, acceptedTerms:true, lastName, accountNumber, loginMethod, phoneNumber : loginMethod ? req.body.phoneNumber : ''};
-            if (!loginMethod){
-                let users = await UserService.getUsers({email:email});
-                if (users.length > 0) return res.processError(400, 'User with email already exist');
-            }
-            body.status = 'inactive';
+            let body = {email, password, firstName, lastName, phoneNumber};
+            let users = await UserService.getUsers({email:email, createdBySelf: true});
+            // if(users.length) = await UserService.getUsers({username:username, createdBySelf: true});
+            if (users.length > 0) return res.processError(400, 'User with email already exist');
             let user = await UserService.createUser(body);
             if (!user) return res.processError(400, 'Error creating user');
             let otp = await OTPUtils.saveOTP(user, 'email', 'true');

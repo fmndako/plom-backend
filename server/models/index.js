@@ -37,5 +37,5 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
 db.attributes = {};
-db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive'];
+db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive', 'createdBySelf'];
 module.exports = db;

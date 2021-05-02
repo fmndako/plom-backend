@@ -39,6 +39,7 @@
     "nodemailer-ses-transport": "^1.5.1",
     "onesignal-node": "^3.2.1",
     "paystack": "^2.0.1",
+    "pg": "^8.6.0",
     "request": "^2.88.0",
     "require-all": "^3.0.0",
     "sequelize": "^6.5.0",

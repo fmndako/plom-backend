@@ -26,18 +26,6 @@
                     "field": "lender",
                     "seqType": "Sequelize.UUID"
                 },
-                "lenderUserName": {
-                    "field": "lenderUserName",
-                    "seqType": "Sequelize.STRING"
-                },
-                "lenderUserPhoneNumbers": {
-                    "field": "lenderUserPhoneNumbers",
-                    "seqType": "Sequelize.JSON"
-                },
-                "lenderUserEmail": {
-                    "field": "lenderUserEmail",
-                    "seqType": "Sequelize.JSON"
-                },
                 "userId": {
                     "foreignKey": true,
                     "references": {
@@ -257,11 +245,11 @@
                 },
                 "guarantorPhoneNumbers": {
                     "field": "guarantorPhoneNumbers",
-                    "seqType": "Sequelize.JSON"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "guarantorEmails": {
                     "field": "guarantorEmails",
-                    "seqType": "Sequelize.JSON"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "acceptedInactiveDays": {
                     "defaultValue": {
@@ -310,10 +298,6 @@
                     "field": "firstName",
                     "seqType": "Sequelize.STRING"
                 },
-                "AKAs": {
-                    "field": "AKAs",
-                    "seqType": "Sequelize.JSON"
-                },
                 "middleName": {
                     "field": "middleName",
                     "seqType": "Sequelize.STRING"
@@ -336,21 +320,21 @@
                 },
                 "isAdmin": {
                     "defaultValue": {
-                        "value": 0
+                        "value": false
                     },
                     "field": "isAdmin",
                     "seqType": "Sequelize.BOOLEAN"
                 },
                 "isSuperadmin": {
                     "defaultValue": {
-                        "value": 0
+                        "value": false
                     },
                     "field": "isSuperadmin",
                     "seqType": "Sequelize.BOOLEAN"
                 },
                 "deleted": {
                     "defaultValue": {
-                        "value": 0
+                        "value": false
                     },
                     "field": "deleted",
                     "seqType": "Sequelize.BOOLEAN"
@@ -373,10 +357,14 @@
                 },
                 "acceptedTerms": {
                     "defaultValue": {
-                        "value": 0
+                        "value": false
                     },
                     "field": "acceptedTerms",
                     "seqType": "Sequelize.BOOLEAN"
+                },
+                "numbers": {
+                    "field": "numbers",
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "phoneNumber": {
                     "field": "phoneNumber",
@@ -446,7 +434,7 @@
                 },
                 "isActive": {
                     "defaultValue": {
-                        "value": 0
+                        "value": false
                     },
                     "field": "isActive",
                     "seqType": "Sequelize.BOOLEAN"
@@ -463,8 +451,11 @@
                     "field": "lastLogin",
                     "seqType": "Sequelize.DATE"
                 },
-                "self": {
-                    "field": "self",
+                "createdBySelf": {
+                    "defaultValue": {
+                        "value": true
+                    },
+                    "field": "createdBySelf",
                     "seqType": "Sequelize.BOOLEAN"
                 },
                 "password": {

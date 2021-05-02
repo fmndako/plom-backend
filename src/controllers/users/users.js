@@ -5,6 +5,33 @@ const logger = new winston('User Management');
 const { getClientId } = require('../../services/encrypt'); 
 
 class UserController{
+    async createLoaner(req, res) {
+        try {
+            let {email, firstName, lastName } = req.body;
+            if (!email || !password) return res.processError(400, 'Invalid request, all fields are required');
+            if (!loginMethod && ( !firstName || !lastName )) return res.processError(400, 'Invalid request, all fields are required');
+            let valid = await checkPassword(password);
+            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            
+            let body = {email, password, firstName, acceptedTerms:true, lastName, loginMethod, phoneNumber : loginMethod ? req.body.phoneNumber : ''};
+            if (!loginMethod){
+                let users = await UserService.getUsers({email:email});
+                if (users.length > 0) return res.processError(400, 'User with email already exist');
+            }
+            body.status = 'inactive';
+            let user = await UserService.createUser(body);
+            if (!user) return res.processError(400, 'Error creating user');
+            let otp = await OTPUtils.saveOTP(user, 'email', 'true');
+            let url = frontendUrl;
+            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            _sendEmailVerificationMail(user, url, 'Email Verification');
+            // user.url = url;
+            logger.success('Sign up', {userId: user.id});
+            return res.status(201).send(user);
+        } catch (error) {
+            res.processError(400, 'Error creating user', error);
+        }
+    }
     async getUser(req, res) {
         try {
             let user = await UserService.getUser(req.user.id);

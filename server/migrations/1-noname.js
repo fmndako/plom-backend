@@ -16,7 +16,7 @@ var Sequelize = require('sequelize');
 var info = {
     "revision": 1,
     "name": "noname",
-    "created": "2021-04-25T10:28:37.083Z",
+    "created": "2021-05-02T17:40:53.498Z",
     "comment": ""
 };
 
@@ -39,10 +39,6 @@ var migrationCommands = function(transaction) {
                     "firstName": {
                         "type": Sequelize.STRING,
                         "field": "firstName"
-                    },
-                    "AKAs": {
-                        "type": Sequelize.JSON,
-                        "field": "AKAs"
                     },
                     "middleName": {
                         "type": Sequelize.STRING,
@@ -67,17 +63,17 @@ var migrationCommands = function(transaction) {
                     "isAdmin": {
                         "type": Sequelize.BOOLEAN,
                         "field": "isAdmin",
-                        "defaultValue": 0
+                        "defaultValue": false
                     },
                     "isSuperadmin": {
                         "type": Sequelize.BOOLEAN,
                         "field": "isSuperadmin",
-                        "defaultValue": 0
+                        "defaultValue": false
                     },
                     "deleted": {
                         "type": Sequelize.BOOLEAN,
                         "field": "deleted",
-                        "defaultValue": 0
+                        "defaultValue": false
                     },
                     "dateDeleted": {
                         "type": Sequelize.DATE,
@@ -98,7 +94,11 @@ var migrationCommands = function(transaction) {
                     "acceptedTerms": {
                         "type": Sequelize.BOOLEAN,
                         "field": "acceptedTerms",
-                        "defaultValue": 0
+                        "defaultValue": false
+                    },
+                    "numbers": {
+                        "type": Sequelize.ARRAY(Sequelize.STRING),
+                        "field": "numbers"
                     },
                     "phoneNumber": {
                         "type": Sequelize.STRING,
@@ -165,7 +165,7 @@ var migrationCommands = function(transaction) {
                     "isActive": {
                         "type": Sequelize.BOOLEAN,
                         "field": "isActive",
-                        "defaultValue": 0
+                        "defaultValue": false
                     },
                     "dateCreated": {
                         "type": Sequelize.DATE,
@@ -176,9 +176,10 @@ var migrationCommands = function(transaction) {
                         "type": Sequelize.DATE,
                         "field": "lastLogin"
                     },
-                    "self": {
+                    "createdBySelf": {
                         "type": Sequelize.BOOLEAN,
-                        "field": "self"
+                        "field": "createdBySelf",
+                        "defaultValue": true
                     },
                     "password": {
                         "type": Sequelize.STRING,
@@ -225,18 +226,6 @@ var migrationCommands = function(transaction) {
                             "key": "id"
                         },
                         "foreignKey": true
-                    },
-                    "lenderUserName": {
-                        "type": Sequelize.STRING,
-                        "field": "lenderUserName"
-                    },
-                    "lenderUserPhoneNumbers": {
-                        "type": Sequelize.JSON,
-                        "field": "lenderUserPhoneNumbers"
-                    },
-                    "lenderUserEmail": {
-                        "type": Sequelize.JSON,
-                        "field": "lenderUserEmail"
                     },
                     "userId": {
                         "type": Sequelize.UUID,
@@ -453,11 +442,11 @@ var migrationCommands = function(transaction) {
                         "field": "guarantorName"
                     },
                     "guarantorPhoneNumbers": {
-                        "type": Sequelize.JSON,
+                        "type": Sequelize.ARRAY(Sequelize.STRING),
                         "field": "guarantorPhoneNumbers"
                     },
                     "guarantorEmails": {
-                        "type": Sequelize.JSON,
+                        "type": Sequelize.ARRAY(Sequelize.STRING),
                         "field": "guarantorEmails"
                     },
                     "acceptedInactiveDays": {
