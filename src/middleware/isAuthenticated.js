@@ -20,11 +20,11 @@ const auth = async(req, res, next) => {
         if (expired) return res.processError(401, 'Token has expired');
         user.tokenCreatedAt = new Date();
         await user.save();
-        if (true) {//(user.isActive || req.path.includes('/logout') || (req.baseUrl === '/api/v1/users' && req.method === 'GET') || req.path.includes('/requestVerification')) {
+        if (user.isActive || req.path.includes('/logout') || req.baseUrl === '/api/v1/users/details' || req.path.includes('/requestVerification')) {
             req.user = user;
-            // req.token = token;
+            req.token = token;
             next();
-        } else{
+        } else {
             return res.processError(405, 'Please activate your account');
         }
     } catch (error) {
