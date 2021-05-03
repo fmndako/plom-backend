@@ -20,7 +20,7 @@ const auth = async(req, res, next) => {
         if (expired) return res.processError(401, 'Token has expired');
         user.tokenCreatedAt = new Date();
         await user.save();
-        if (user.isActive || req.path.includes('/logout') || req.baseUrl === '/api/v1/users/details' || req.path.includes('/requestVerification')) {
+        if (user.isActive || req.path.includes('/logout') || req.path.includes('/details') || req.path.includes('/requestVerification')) {
             req.user = user;
             req.token = token;
             next();
