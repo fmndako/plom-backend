@@ -52,6 +52,7 @@ module.exports = (sequelize, DataTypes) => {
         dateCreated: {type: DataTypes.DATE, defaultValue: DataTypes.NOW},
         lastLogin: DataTypes.DATE,
         createdBySelf: {type: DataTypes.BOOLEAN,  defaultValue: true},
+        users: {type: DataTypes.ARRAY(DataTypes.UUID), defaultValue: []},
         password: {
             type: DataTypes.STRING,
             allowNULL: false,
@@ -70,6 +71,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         hooks: {
             beforeCreate: async function(user) {
+                if (!user.password ) return;
                 user.password = await bcrypt.hash(user.password, 8);
             },
         },
@@ -77,19 +79,29 @@ module.exports = (sequelize, DataTypes) => {
     });
 
   
+    // User.associate = (models) => {
+    //     // User.hasMany(models.Loan, {
+    //     //     foreignKey: 'userId',
+    //     //     as: 'loans',
+    //     // });
+
+    //     User.belongsToMany(User, { as: 'Lender', foreignKey: 'lender', through: models.Loan });
+    //     User.belongsToMany(User, { as: 'User', foreignKey: 'userId', through: models.Loan });
+    // };
+    // User.associate = (models) => {
+    //     User.belongsTo(models.Loan, {
+    //         foreignKey: 'lender',
+    //         as: 'lends',
+    //     });
+    // };
     User.associate = (models) => {
-        User.hasMany(models.Loan, {
-            foreignKey: 'userId',
-            as: 'loans',
-        });
-    };
-    User.associate = (models) => {
+        User.belongsToMany(User, { as: 'Lender', foreignKey: 'lender', through: models.Loan });
+        User.belongsToMany(User, { as: 'User', foreignKey: 'userId', through: models.Loan });
+    
         User.hasMany(models.Token, {
             foreignKey: 'userId',
             as: 'tokens',
         });
-    };
-    User.associate = (models) => {
         User.hasMany(models.UserConfig, {
             foreignKey: 'userId',
             as: 'configs',

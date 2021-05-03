@@ -5,31 +5,48 @@ const logger = new winston('User Management');
 const { getClientId } = require('../../services/encrypt'); 
 
 class UserController{
-    async createLoaner(req, res) {
+    async createLoanUser(req, res) {
         try {
-            let {email, firstName, lastName } = req.body;
-            if (!email || !password) return res.processError(400, 'Invalid request, all fields are required');
-            if (!loginMethod && ( !firstName || !lastName )) return res.processError(400, 'Invalid request, all fields are required');
-            let valid = await checkPassword(password);
-            if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
-            
-            let body = {email, password, firstName, acceptedTerms:true, lastName, loginMethod, phoneNumber : loginMethod ? req.body.phoneNumber : ''};
-            if (!loginMethod){
-                let users = await UserService.getUsers({email:email});
-                if (users.length > 0) return res.processError(400, 'User with email already exist');
-            }
-            body.status = 'inactive';
+            let {emails, firstName, numbers, lastName } = req.body;
+            if ( !firstName ) return res.processError(400, 'Invalid request, all fields are required');
+            let body = {emails, numbers, firstName, lastName};
+            body.createdBySelf = false;
             let user = await UserService.createUser(body);
+            let saved = await db.User.update(
+                {'users': db.sequelize.fn('array_append', db.Sequelize.col('users'), user.id)},
+                {'where': {'id': req.user.id}});
             if (!user) return res.processError(400, 'Error creating user');
-            let otp = await OTPUtils.saveOTP(user, 'email', 'true');
-            let url = frontendUrl;
-            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
-            _sendEmailVerificationMail(user, url, 'Email Verification');
-            // user.url = url;
-            logger.success('Sign up', {userId: user.id});
+            logger.success('Added new user', {userId: req.user.id});
             return res.status(201).send(user);
         } catch (error) {
             res.processError(400, 'Error creating user', error);
+        }
+    }
+
+    async updateLoanUser(req, res) {
+        try {
+            let {emails, firstName, numbers, lastName } = req.body;
+            let body = {emails, numbers, firstName, lastName};
+            let user = await UserService.updateUser(req.params.id, body);
+            if (!user) return res.processError(400, 'Error creating user');
+            logger.success('Update loan user', {userId: req.user.id});
+            return res.status(201).send(user);
+        } catch (error) {
+            res.processError(400, 'Error updating user', error);
+        }
+    }
+    async deleteLoanUser(req, res) {
+        try {
+            if(!req.user.users.includes(req.params.id)) return res.processError(400, 'User doesnt exist');
+            let user = await db.User.destroy({where: {id: req.params.id}});
+            let saved = await db.User.update(
+                {'users': db.sequelize.fn('array_remove', db.Sequelize.col('users'), req.params.id)},
+                {'where': {'id': req.user.id}});
+            if (!user) return res.processError(400, 'Removed loan user');
+            logger.success('deleted user', {userId: req.user.id});
+            return res.send({detail: 'user deleted successfully'});
+        } catch (error) {
+            res.processError(400, 'Error deleting user', error);
         }
     }
     async getUser(req, res) {
@@ -41,25 +58,11 @@ class UserController{
             res.processError(400, 'Error getting user');
         }
     }
-    async getUsers(req, res) {
+    async getLoanUsers(req, res) {
         try {
             const search = {};
             let { startDate, skipData, limitData } = req.query;
-            let endDate = req.query.endDate;
-
-            if (startDate && endDate) {
-                endDate = new Date(endDate);
-                endDate.setDate(endDate.getDate() + 1);
-                
-            } else {
-                endDate = new Date();
-                startDate = new Date();
-                startDate.setDate(endDate.getDate() - 7);
-            }
-            search.dateCreated = {
-                $gte: new Date(startDate),
-                $lte: endDate
-            };
+            search.users = {[db.Sequelize.Op.contains]: req.user.users};
             let user = await UserService.getUsers(search, skipData, limitData);
             res.send(user);
         }

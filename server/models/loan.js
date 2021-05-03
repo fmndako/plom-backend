@@ -40,12 +40,8 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Loan.associate = (models) => {
-        Loan.belongsTo(models.User, {
-            foreignKey: 'userId',
-            onDelete: 'CASCADE',
-        });
-    };
-    Loan.associate = (models) => {
+        Loan.belongsTo(models.User, { as: 'User', foreignKey: 'userId', onDelete: 'CASCADE'});
+        Loan.belongsTo(models.User, { as: 'Lender', foreignKey: 'lender', onDelete: 'CASCADE' });
         Loan.hasMany(models.Offset, {
             foreignKey: 'loanId',
             as: 'offsets',

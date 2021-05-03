@@ -24,10 +24,6 @@
                         "key": "id"
                     },
                     "field": "lender",
-                    "allowNull": true,
-                    "onDelete": "CASCADE",
-                    "onUpdate": "CASCADE",
-                    "unique": "Loans_userId_lender_unique",
                     "seqType": "Sequelize.UUID"
                 },
                 "userId": {
@@ -37,10 +33,6 @@
                         "key": "id"
                     },
                     "field": "userId",
-                    "allowNull": true,
-                    "onDelete": "CASCADE",
-                    "onUpdate": "CASCADE",
-                    "unique": "Loans_userId_lender_unique",
                     "seqType": "Sequelize.UUID"
                 },
                 "loanItem": {
@@ -494,5 +486,5 @@
             "indexes": []
         }
     },
-    "revision": 4
+    "revision": 3
 }

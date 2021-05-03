@@ -9,7 +9,6 @@ const loans  = require('./loans');
 
 
 apiRouter.use('/', users);
-apiRouter.use('/loans', loans);
 // apiRouter.use('/wallets', wallets);
 // apiRouter.use('/activityLogs', activityLogs);
 

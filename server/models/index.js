@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const Sequelize = require('sequelize');
+const loan = require('./loan');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
 const config = require(__dirname + '/../config/config.js')[env];
@@ -33,9 +34,15 @@ Object.keys(db).forEach(modelName => {
 // async function  dropData(){
 //   await sequelize.sync({ force: true });
 // }
+
+// db.User.belongsToMany(db.User, { as: 'Lender', foreignKey: 'lender', through: db.Loan });
+// db.User.belongsToMany(db.User, { as: 'User', foreignKey: 'userId', through: db.Loan });
+// db.Loan.belongsTo(db.User,  {as: 'Lender', foreignKey: 'lender', onDelete: 'CASCADE'});
+// db.Loan.belongsTo(db.User,  {as: 'User', foreignKey: 'userId', onDelete: 'CASCADE'});
+
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
-
 db.attributes = {};
-db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive', 'createdBySelf'];
+db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive', 'createdBySelf', 'users', 'numbers', 'emails'];
+db.attributes.userShort = ['id', 'firstName', 'lastName', 'numbers', 'emails'];
 module.exports = db;

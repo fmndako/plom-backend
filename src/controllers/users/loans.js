@@ -18,12 +18,14 @@ class LoanController{
     }
     async getLoans(req, res) {
         try {
-            let {page, limit, offset, startDate, endDate, query } = req.processReq(req);
-
-
-
-            
-            let loans = await db.Loan.findAndCountAll({where: {deleted:{[Op.ne]: true},userId: req.user.id}, include: {model: db.Offset, as: 'offsets'}, order:[['createdAt', 'DESC']]});
+            let {page, limit, offset, startDate, endDate, query, type,  } = req.processReq(req);
+            let loans = await db.Loan.findAndCountAll({where: {deleted:{[Op.ne]: true}, userId: req.user.id}, 
+                include: [
+                    {model: db.Offset, as: 'offsets'}, 
+                    {model: db.User, as: 'User', attributes: db.attributes.userShort}, 
+                    {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
+                ],
+                order:[['createdAt', 'DESC']]});
             loans.rows = loans.rows.splice(offset, limit);
             res.paginateRes(loans, page, limit );
         }
@@ -33,34 +35,14 @@ class LoanController{
     }
     async createLoan(req, res) {
         try {
-            let body = returnOnlyArrayProperties(req.body, ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption', 'remarks']);
+            let body = returnOnlyArrayProperties(req.body, ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks']);
             body.userId = req.user.id;
-            let lender = req.body.user; 
-            body.otherUserAKA = [];
-            let other;
-            if(!lender) return res.processError(400, 'Please enter lender/borrower details');
-            lender.numbers = lender.numbers; //process phonenumber
-            if (lender.email.length || lender.numbers.length){
-                if(lender.email.length){
-                    other = await db.User.findOne({where: {email: {[Op.in] : lender.email}}, attributes: ['id', 'phoneNumber','email', 'AKAs'], });
-                } 
-                if (!other){
-                    other = await db.User.findOne({where: {phoneNumber: {[Op.in]: lender.numbers}}, attributes: ['id', 'AKAs']});
-                }
-            } else return res.processError(400, 'Please enter user email or phone number');
-            if (other) {
-                body.lender = other.id;
-            }
-            else {
-                body.otherUserName = lender.name;
-                body.otherUserPhoneNumbers = lender.numbers;
-                body.otherUserEmail = lender.email;
-            }
+            if(!body.lender) return res.processError(400, 'Please enter lender/borrower details');
+            let lender = await db.User.findByPk(body.lender, {attributes: ['id', 'phoneNumber','email'], });
+            if(!lender) return res.processError(400, 'lender cannot be null');
             let loan = await db.Loan.create(body);
-
             logger.success('Create Loan', {id: loan.id, userId:req.user.id});
-            
-            res.send(await db.Loan.findAll({where: {userId: req.user.id}}));
+            res.send(loan);//await db.Loan.findAll({where: {userId: req.user.id}}));
         }
         catch(error){
             res.processError(400, 'Error creating loan', error);
@@ -83,35 +65,10 @@ class LoanController{
         try {
             let loan = await db.Loan.findOne({where: {deleted:{[Op.ne]: true} , id: req.params.id}});
             if (!loan) return res.processError(400, 'Loan not found');
-            let body = returnOnlyArrayProperties(req.body, ['amount', 'dateTaken', 'repaymentOption', 'remarks']);
-            body.userId = req.user.id;body.userId = req.user.id;
-            let lender = req.body.user; 
-            let other;
-            if(lender) {
-                if(lender.id) body.lender = lender.id;
-                else{
-                    if (lender.email.length || lender.numbers.length){
-                        if(lender.email.length){
-                            other = await db.User.findOne({where: {email: {[Op.in] : lender.email}}, attributes: ['id', 'phoneNumber','email', 'AKAs'], });
-                        } 
-                        if (!other){
-                            other = await db.User.findOne({where: {phoneNumber: {[Op.in]: lender.numbers}}, attributes: ['id', 'AKAs']});
-                        }
-                        if (other) {
-                            body.lender = other.id;
-                        }
-                        else {
-                            body.otherUserName = lender.name;
-                            body.otherUserPhoneNumbers = lender.numbers;
-                            body.otherUserEmail = lender.email;
-                        }
-                    } 
-                }
-            }
+            let body = returnOnlyArrayProperties(req.body, ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks']);
             Object.keys(body).forEach(k => {
                 loan[k] = body[k];
             });
-           
             await loan.save();
             logger.success('Update loan', {userId: req.user.id, loanId: loan.id});
             res.send(loan);
