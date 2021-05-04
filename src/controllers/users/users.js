@@ -62,12 +62,12 @@ class UserController{
         try {
             const search = {};
             let { startDate, skipData, limitData } = req.query;
-            search.users = {[db.Sequelize.Op.contains]: req.user.users};
-            let user = await UserService.getUsers(search, skipData, limitData);
+            // search.users = {[db.Sequelize.Op.contains]: req.user.users};
+            let user = await db.User.findAll({where: {id: {[db.Sequelize.Op.in]: req.user.users}}});
             res.send(user);
         }
         catch(error){
-            res.processError(400, 'Error getting users');
+            res.processError(400, 'Error getting users', error);
         }
     }
     async updateUser(req, res) {
