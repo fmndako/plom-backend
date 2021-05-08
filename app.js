@@ -5,6 +5,7 @@ const path = require('path');
 const morgan = require('morgan');
 // Models
 const app = express();
+const cors = require('cors');
 const config = require('./config/index.js');
 const db = require('./server/models');
 const route = require('./src/routes/routes');
@@ -19,7 +20,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan('combined', { stream: logger.stream }));
 app.use(resProcessor);
 app.use(reqProcessor);
-
+app.use(cors());
 app.get('/', async function(req, res) {
     let u = require('./server/models').User;
     u = await u.create({email: 'a@sdf.fd', password: 'girdsfdfl'});
