@@ -38,10 +38,11 @@ class LoanController{
             let body = returnOnlyArrayProperties(req.body, ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks']);
             body.userId = req.user.id;
             if(!body.lender) return res.processError(400, 'Please enter lender/borrower details');
-            let lender = await db.User.findByPk(body.lender, {attributes: ['id', 'phoneNumber','email'], });
+            let lender = await db.User.findByPk(body.lender, {attributes: db.attributes.user,});
             if(!lender) return res.processError(400, 'lender cannot be null');
             let loan = await db.Loan.create(body);
             logger.success('Create Loan', {id: loan.id, userId:req.user.id});
+            loan.dataValues.Lender = lender;
             res.send(loan);//await db.Loan.findAll({where: {userId: req.user.id}}));
         }
         catch(error){
