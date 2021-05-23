@@ -51,12 +51,17 @@ class LoanController{
     }
     async deleteLoan(req, res) {
         try{
-            let loan = await db.Loan.findOne({where: {deleted:{[Op.ne]: true} , id: req.params.id}});
-            if(!loan) return res.processError(400, 'Loan not found');
-            loan.deleted = true;
-            await loan.save();
-            logger.success('Delete Loan', {userId:req.user.id, loanId: loan.id});
-            return res.send({detail: 'app deleted'});
+            let ids = req.params.id ? [req.params.id] : (req.query.ids? req.query.ids.split(','): []);
+            if(!ids && !ids.length) return res.processError(400, 'Loan(s) cannot be null');
+            let loans = await db.Loan.findAll({where: {deleted:{[Op.ne]: true} , id: {[Op.in]: ids}}});
+            if(!loans.length) return res.processError(400, 'Loan(s) not found');
+            loans.forEach(l => {
+                if(req.user.id === l.userId) l.deleted = true;
+                else l.lenderDeleted = true;
+                l.save();
+                logger.success('Delete Loan', {userId:req.user.id, loanId: l.id});
+            });
+            return res.send({detail: 'Delete successful'});
         }
         catch(error){
             res.processError(400, 'Error deleting loan', error);

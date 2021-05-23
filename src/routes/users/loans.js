@@ -19,7 +19,7 @@ router.get('/:id', LoanController.getLoan);
 
 router.put('/:id', LoanController.updateLoan);
 
-router.delete('/:id', LoanController.deleteLoan);
+router.delete('/:id?', LoanController.deleteLoan);
 
 
 router.post('/:id/offset', LoanController.createOffset);

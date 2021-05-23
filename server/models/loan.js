@@ -37,6 +37,7 @@ module.exports = (sequelize, DataTypes) => {
         repaymentOptions: DataTypes.STRING,
         remarks: DataTypes.STRING,
         deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
     });
 
     Loan.associate = (models) => {
