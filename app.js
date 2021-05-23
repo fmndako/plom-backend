@@ -47,4 +47,4 @@ process.on('uncaughtException', function(error) {
 
 app.listen(config.port);
 
-console.log(`Listening @ port ${config.port}`);
+console.log(`Listening @ port - ${config.port}`);
