@@ -22,10 +22,8 @@ app.use(resProcessor);
 app.use(reqProcessor);
 app.use(cors());
 app.get('/', async function(req, res) {
-    let u = require('./server/models').User;
-    u = await u.create({email: 'a@sdf.fd', password: 'girdsfdfl'});
-    console.log(u);
-    res.send('App works!!');
+   
+    res.send('App works fine!!');
 
 });
 // All route should be added to the index.js file inside the route folder
