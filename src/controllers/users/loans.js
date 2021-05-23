@@ -44,7 +44,8 @@ class LoanController{
             logger.success('Create Loan', {id: loan.id, userId:req.user.id});
             loan.dataValues.Lender = lender;
             res.send(loan);//await db.Loan.findAll({where: {userId: req.user.id}}));
-        } catch(error){
+        } 
+        catch(error){
             res.processError(400, 'Error creating loan', error);
         }
     }
