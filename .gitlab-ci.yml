@@ -1,0 +1,43 @@
+stages:
+  - deploy
+
+deploy_production:
+  image: python:3.5
+  environment: production
+  stage: deploy
+  before_script:
+  - apt-get update -qq
+  - apt-get install -qq git
+  # Setup SSH deploy keys
+  - 'which ssh-agent || ( apt-get install -qq openssh-client )'
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PK_PROD")
+  - mkdir -p ~/.ssh
+  - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  variables:
+    SSH_PK: $SSH_PK_PROD
+  script:
+    - scripts/deploy.sh prod@46.101.78.130
+  only:
+    - master
+
+
+deploy_staging:
+  image: python:3.5
+  environment: staging
+  stage: deploy
+  before_script:
+    - apt-get update -qq
+    - apt-get install -qq git
+    - 'which ssh-agent || ( apt-get update -y && apt-get install openssh-client -y )'
+    - eval $(ssh-agent -s)
+    - echo '$SSH_PK_STAGING'
+    - ssh-add <(echo "$SSH_PK_STAGING")
+    - mkdir -p ~/.ssh
+    - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+  variables:
+    SSH_PK: $SSH_PK_STAGING
+  script:
+    - scripts/deploy_staging.sh staging@46.101.78.130
+  only:
+    - staging
