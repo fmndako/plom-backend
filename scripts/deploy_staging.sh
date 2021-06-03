@@ -6,11 +6,11 @@ cd `dirname $0`/..
 
 ssh $server << 'ENDSSH'
 cd plom-backend
-sudo git checkout .
-sudo git checkout staging
-sudo git pull origin staging
-sudo npm install
-sudo npm run build
+git checkout .
+git checkout staging
+git pull origin staging
+npm install
+npm run db:migrate
 pm2 restart backend
 
 ENDSSH

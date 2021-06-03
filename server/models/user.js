@@ -97,11 +97,13 @@ module.exports = (sequelize, DataTypes) => {
     User.associate = (models) => {
         User.belongsToMany(User, { as: 'Lender', foreignKey: 'lender', through: models.Loan });
         User.belongsToMany(User, { as: 'User', foreignKey: 'userId', through: models.Loan });
-    
+
+        User.hasMany(models.ActivityLog, { foreignKey: 'userId' });
         User.hasMany(models.Token, {
             foreignKey: 'userId',
             as: 'tokens',
         });
+
         User.hasMany(models.UserConfig, {
             foreignKey: 'userId',
             as: 'configs',

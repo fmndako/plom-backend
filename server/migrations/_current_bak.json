@@ -86,6 +86,13 @@
                     "field": "deleted",
                     "seqType": "Sequelize.BOOLEAN"
                 },
+                "lenderDeleted": {
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "lenderDeleted",
+                    "seqType": "Sequelize.BOOLEAN"
+                },
                 "createdAt": {
                     "allowNull": false,
                     "field": "createdAt",
@@ -494,5 +501,5 @@
             "indexes": []
         }
     },
-    "revision": 4
+    "revision": 5
 }

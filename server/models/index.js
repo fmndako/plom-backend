@@ -6,9 +6,11 @@ const Sequelize = require('sequelize');
 const loan = require('./loan');
 const basename = path.basename(__filename);
 const env = process.env.NODE_ENV || 'development';
-const config = require(__dirname + '/../config/config.js')[env];
+let config = require(__dirname + '/../config/config.js')[env];
 const db = {};
+const log = process.env.LOG_SQL_CONSOLE === 'true';
 
+config.logging = log;
 let sequelize;
 if (config.url) {
     sequelize = new Sequelize(config.url, config);
@@ -34,11 +36,6 @@ Object.keys(db).forEach(modelName => {
 // async function  dropData(){
 //   await sequelize.sync({ force: true });
 // }
-
-// db.User.belongsToMany(db.User, { as: 'Lender', foreignKey: 'lender', through: db.Loan });
-// db.User.belongsToMany(db.User, { as: 'User', foreignKey: 'userId', through: db.Loan });
-// db.Loan.belongsTo(db.User,  {as: 'Lender', foreignKey: 'lender', onDelete: 'CASCADE'});
-// db.Loan.belongsTo(db.User,  {as: 'User', foreignKey: 'userId', onDelete: 'CASCADE'});
 
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;

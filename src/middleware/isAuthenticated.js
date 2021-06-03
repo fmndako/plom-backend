@@ -9,7 +9,7 @@ const auth = async(req, res, next) => {
         const token = req.header('Authorization') ? req.header('Authorization').replace('Bearer ', '') : null;
         if (!token){return res.processError(401, 'Token not provided');}
         let data = jwt.verify(token, process.env.JWT_KEY);
-        let user = await db.User.findOne({where: {id:data.id, deleted: {[Op.ne]: true}}});
+        let user = await db.User.findOne({where: {id: data.id, deleted: {[Op.ne]: true}}});
         if (!user) {
             throw new Error();
         }
@@ -28,7 +28,7 @@ const auth = async(req, res, next) => {
             return res.processError(405, 'Please activate your account');
         }
     } catch (error) {
-        res.processError(401, 'Not authorized to access this resource' );
+        res.processError(401, 'Not authorized to access this resource', error );
         // res.processError(401, error );
     }
 

@@ -21,6 +21,7 @@ router.put('/:id', LoanController.updateLoan);
 
 router.delete('/:id?', LoanController.deleteLoan);
 
+router.post('/:id/clear', LoanController.clearLoan);
 
 router.post('/:id/offset', LoanController.createOffset);
 
