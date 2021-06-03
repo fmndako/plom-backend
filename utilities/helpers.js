@@ -18,7 +18,17 @@ function returnOnlyArrayProperties(obj, array, model){
 
 }
 
+function sumArray(array, key){
+    let total = 0;
+    array.forEach( o => {
+        total += key ? o[key] : o;
+    });
+    return total;
+
+}
+
 module.exports = {
     removeArrayProperties,
-    returnOnlyArrayProperties
+    returnOnlyArrayProperties,
+    sumArray
 };

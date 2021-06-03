@@ -2,8 +2,8 @@
 
 const logger = require('../../config/winston');
 const category = 'Winston Service';
-// const db = require('../models/index');
-// const Logs = db.activityLogs;
+const db = require('../../server/models');
+const Logs = db.ActivityLog;
 
 const logObj = {
     action: 'Logger',
@@ -70,9 +70,9 @@ class WinstonLogger {
             meta.category = meta.category ? meta.category : this.category;
             meta.type = meta.type ? meta.type : this.type;
             meta.action = meta.action ? meta.action : 'User action';
-            meta.logLevel = level;
+            meta.level = level;
             meta.message = message;
-            // Logs.create(meta);
+            Logs.create(meta);
             logger.log(level, meta.action + ': ' + message, {meta}); 
 
         } catch (error) {
