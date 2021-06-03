@@ -12,7 +12,7 @@ const route = require('./src/routes/routes');
 const winston = require('./src/services/winston');
 const logger = new winston('Server logs');
 const {resProcessor, reqProcessor} = require('./src/middleware/processor');
-
+require('./utilities/prototypes');
 // Parse the payload and add to request.body
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());

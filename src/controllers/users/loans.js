@@ -3,7 +3,7 @@ const Op = require('../../../server/models').Sequelize.Op;
 const db = require('../../../server/models');
 const winston = require('../../services/winston');
 const logger = new winston('Loan Management');
-const { returnOnlyArrayProperties} = require('../../../utilities/helpers');
+const { returnOnlyArrayProperties, sumArray } = require('../../../utilities/helpers');
 
 class LoanController{
     async getLoan(req, res) {
@@ -18,15 +18,50 @@ class LoanController{
     }
     async getLoans(req, res) {
         try {
-            let {page, limit, offset, startDate, endDate, query, type,  } = req.processReq(req);
-            let loans = await db.Loan.findAndCountAll({where: {deleted:{[Op.ne]: true}, userId: req.user.id}, 
+            let {page, limit, offset, startDate, endDate, type,  } = req.processReq(req);
+            let userConfig = await db.UserConfig.findOne({where: {userId: req.user.id}});
+            console.log(userConfig);
+            let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7; 
+            let queryObj = { 
+                'All Loans': {},
+                'Lend': {type:'Lend'}, 
+                'Borrow': { type:'Borrow'}, 
+                'Due Soon': {dateToRepay: {[Op.lte]: new Date().addPeriod('Days', reminderDays).endOf('day'), [Op.gt]: new Date().endOf('day')} },
+                'Due Today':  {dateToRepay: {[Op.gte]: new Date().startOf('day'), [Op.lte]: new Date().endOf('day')} },
+                'Over Due': {dateToRepay: {[Op.lt]: new Date().startOf('day'),}}, 
+                'Due Loans': {dateToRepay: {[Op.lt]: new Date().addPeriod('Days', reminderDays).endOf('day')}},
+            };
+            let query = {};
+            if (req.query.type) query = queryObj[req.query.type];
+            if (req.query.active === 'true'){
+                query.cleared = {[Op.ne]: true};
+            } else if (req.query.active === 'false'){
+                query.cleared = true;
+            }
+            query.deleted = {[Op.ne]: true};
+            query.userId = req.user.id;
+            let loans = await db.Loan.findAndCountAll({where: query, 
                 include: [
                     {model: db.Offset, as: 'offsets'}, 
                     {model: db.User, as: 'User', attributes: db.attributes.userShort}, 
                     {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
                 ],
                 order:[['createdAt', 'DESC']]});
-            loans.rows = loans.rows.splice(offset, limit);
+            for (let loan of loans.rows){
+                let bal, status;
+                if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
+                if(loan.cleared) status = 'Cleared';
+                else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
+                    status = 'Due Soon';
+                } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
+                    status = 'Due Today';
+                } else if (loan.dateToRepay < new Date().startOf('day')  ){
+                    status = 'Over Due';
+                } else status = 'Active';
+                loan.dataValues.status = status;
+                loan.dataValues.bal = bal;
+            }
+            // loans.rows = loans.rows.splice(offset, limit);
             res.paginateRes(loans, page, limit );
         }
         catch (error) {
@@ -41,7 +76,7 @@ class LoanController{
             let lender = await db.User.findByPk(body.lender, {attributes: db.attributes.user,});
             if(!lender) return res.processError(400, 'lender cannot be null');
             let loan = await db.Loan.create(body);
-            logger.success('Create Loan', {id: loan.id, userId:req.user.id});
+            logger.success('Create Loan', {objectId: loan.id, userId:req.user.id});
             loan.dataValues.Lender = lender;
             res.send(loan);//await db.Loan.findAll({where: {userId: req.user.id}}));
         } 
@@ -59,7 +94,7 @@ class LoanController{
                 if(req.user.id === l.userId) l.deleted = true;
                 else l.lenderDeleted = true;
                 l.save();
-                logger.success('Delete Loan', {userId:req.user.id, loanId: l.id});
+                logger.success('Delete Loan', { objectId: l.id, userId:req.user.id,});
             });
             return res.send({detail: 'Delete successful'});
         }
@@ -76,19 +111,35 @@ class LoanController{
                 loan[k] = body[k];
             });
             await loan.save();
-            logger.success('Update loan', {userId: req.user.id, loanId: loan.id});
+            logger.success('Update loan', {userId: req.user.id, objectId: loan.id});
             res.send(loan);
         } catch (error) {
             res.processError(400, 'Error updating user loan', error);
         }
     }
     
+
+    async clearLoan(req, res) {
+        try {
+            let body = returnOnlyArrayProperties(req.body, ['date']);
+            await db.Loan.update(
+                { dateCleared: body.date, cleared: true},
+                { where: { id: req.params.id } }
+              );
+            logger.success('Loan Cleared', {objectId: req.params.id, userId:req.user.id,});
+            res.send({detail: 'Loan cleared successfully'});
+        }
+        catch(error){
+            res.processError(400, 'Error adding offset', error);
+        }
+    }
+
     async createOffset(req, res) {
         try {
             let body = returnOnlyArrayProperties(req.body, ['amount', 'remarks', 'date']);
             body.loanId = req.params.id;
             let offset = await db.Offset.create(body);
-            logger.success('Added Offset', {id: req.params.id, userId:req.user.id,});
+            logger.success('Added Offset', {objectId: req.params.id, userId:req.user.id,});
             res.send(offset);
         }
         catch(error){
@@ -99,7 +150,7 @@ class LoanController{
         try{
             let offset = await db.Offset.destroy({where: {id: req.params.offsetId}});
             if(!offset) return res.processError(400, 'Offset not found');
-            logger.success('Delete Offset', {userId:req.user.id, loanId: req.params.id});
+            logger.success('Delete Offset', {userId:req.user.id, objectId: req.params.id});
             return res.send({detail: 'offset deleted'});
         }
         catch(error){
@@ -115,7 +166,7 @@ class LoanController{
                 offset[k] = body[k];
             });
             await offset.save();
-            logger.success('Update offset', {userId: req.user.id, loanId: req.params.id});
+            logger.success('Update offset', {userId: req.user.id, objectId: req.params.id});
             res.send(offset);
         } catch (error) {
             res.processError(400, 'Error updating user offset', error);

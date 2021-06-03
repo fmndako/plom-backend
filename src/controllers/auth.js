@@ -33,6 +33,7 @@ class UserController {
             let url = frontendUrl;
             url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
             _sendEmailVerificationMail(user, url, 'Email Verification');
+            _createUserConfig(user.id);
             // user.url = url;
             logger.success('Sign up', {userId: user.id});
             return res.status(201).send(user);
@@ -192,6 +193,16 @@ class UserController {
 function checkPassword(str){
     let re = /^(?=.*\d)(?=.*[!@#$%^'"&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     return re.test(str);
+}
+async function _createUserConfig(id){
+    let body = {
+        userId: id,
+        reminderDays: 7,
+        currency: 'NG',
+        notification: true,
+    }
+    await db.userConfig.create(body);
+    logger.info('user config created', {userId: id});
 }
 async function  _sendEmailVerificationMail (user, url, subject, otp){
     try {
