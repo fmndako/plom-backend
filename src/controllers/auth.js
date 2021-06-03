@@ -32,7 +32,8 @@ class UserController {
             if (!user) return res.processError(400, 'Error creating user');
             let otp = await OTPUtils.saveOTP(user, 'email', 'true');
             let url = frontendUrl;
-            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            // url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            url = `${url}/verifyEmail/${user.id}/${otp}`;
             _sendEmailVerificationMail(user, url, 'Email Verification');
             _createUserConfig(user.id);
             //Message.send(233, 'dfdsf');
