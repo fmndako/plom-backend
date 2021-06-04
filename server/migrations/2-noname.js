@@ -1,6 +1,6 @@
 'use strict';
 
-var Sequelize = require('sequelize');
+let Sequelize = require('sequelize');
 
 /**
  * Actions summary:
@@ -14,166 +14,166 @@ var Sequelize = require('sequelize');
  *
  **/
 
-var info = {
-    "revision": 2,
-    "name": "noname",
-    "created": "2021-05-02T19:01:14.592Z",
-    "comment": ""
+let info = {
+    'revision': 2,
+    'name': 'noname',
+    'created': '2021-05-02T19:01:14.592Z',
+    'comment': ''
 };
 
-var migrationCommands = function(transaction) {
+let migrationCommands = function(transaction) {
     return [{
-            fn: "removeColumn",
-            params: [
-                "UserConfigs",
-                "guarantorEmails",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "removeColumn",
-            params: [
-                "UserConfigs",
-                "guarantorPhoneNumbers",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "removeColumn",
-            params: [
-                "UserConfigs",
-                "guarantorName",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "Users",
-                "users",
-                {
-                    "type": Sequelize.ARRAY(Sequelize.STRING),
-                    "field": "users"
+        fn: 'removeColumn',
+        params: [
+            'UserConfigs',
+            'guarantorEmails',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'removeColumn',
+        params: [
+            'UserConfigs',
+            'guarantorPhoneNumbers',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'removeColumn',
+        params: [
+            'UserConfigs',
+            'guarantorName',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'Users',
+            'users',
+            {
+                'type': Sequelize.ARRAY(Sequelize.STRING),
+                'field': 'users'
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'Users',
+            'emails',
+            {
+                'type': Sequelize.ARRAY(Sequelize.STRING),
+                'field': 'emails'
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'UserConfigs',
+            'guarantor',
+            {
+                'type': Sequelize.UUID,
+                'field': 'guarantor',
+                'references': {
+                    'model': 'Users',
+                    'key': 'id'
                 },
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "Users",
-                "emails",
-                {
-                    "type": Sequelize.ARRAY(Sequelize.STRING),
-                    "field": "emails"
-                },
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "UserConfigs",
-                "guarantor",
-                {
-                    "type": Sequelize.UUID,
-                    "field": "guarantor",
-                    "references": {
-                        "model": "Users",
-                        "key": "id"
-                    },
-                    "foreignKey": true
-                },
-                {
-                    transaction: transaction
-                }
-            ]
-        }
+                'foreignKey': true
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    }
     ];
 };
-var rollbackCommands = function(transaction) {
+let rollbackCommands = function(transaction) {
     return [{
-            fn: "removeColumn",
-            params: [
-                "UserConfigs",
-                "guarantor",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "removeColumn",
-            params: [
-                "Users",
-                "users",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "removeColumn",
-            params: [
-                "Users",
-                "emails",
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "UserConfigs",
-                "guarantorEmails",
-                {
-                    "type": Sequelize.ARRAY(Sequelize.STRING),
-                    "field": "guarantorEmails"
-                },
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "UserConfigs",
-                "guarantorPhoneNumbers",
-                {
-                    "type": Sequelize.ARRAY(Sequelize.STRING),
-                    "field": "guarantorPhoneNumbers"
-                },
-                {
-                    transaction: transaction
-                }
-            ]
-        },
-        {
-            fn: "addColumn",
-            params: [
-                "UserConfigs",
-                "guarantorName",
-                {
-                    "type": Sequelize.STRING,
-                    "field": "guarantorName"
-                },
-                {
-                    transaction: transaction
-                }
-            ]
-        }
+        fn: 'removeColumn',
+        params: [
+            'UserConfigs',
+            'guarantor',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'removeColumn',
+        params: [
+            'Users',
+            'users',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'removeColumn',
+        params: [
+            'Users',
+            'emails',
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'UserConfigs',
+            'guarantorEmails',
+            {
+                'type': Sequelize.ARRAY(Sequelize.STRING),
+                'field': 'guarantorEmails'
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'UserConfigs',
+            'guarantorPhoneNumbers',
+            {
+                'type': Sequelize.ARRAY(Sequelize.STRING),
+                'field': 'guarantorPhoneNumbers'
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    },
+    {
+        fn: 'addColumn',
+        params: [
+            'UserConfigs',
+            'guarantorName',
+            {
+                'type': Sequelize.STRING,
+                'field': 'guarantorName'
+            },
+            {
+                transaction: transaction
+            }
+        ]
+    }
     ];
 };
 
@@ -182,7 +182,7 @@ module.exports = {
     useTransaction: true,
     execute: function(queryInterface, Sequelize, _commands)
     {
-        var index = this.pos;
+        let index = this.pos;
         function run(transaction) {
             const commands = _commands(transaction);
             return new Promise(function(resolve, reject) {
@@ -190,7 +190,7 @@ module.exports = {
                     if (index < commands.length)
                     {
                         let command = commands[index];
-                        console.log("[#"+index+"] execute: " + command.fn);
+                        console.log('[#'+index+'] execute: ' + command.fn);
                         index++;
                         queryInterface[command.fn].apply(queryInterface, command.params).then(next, reject);
                     }

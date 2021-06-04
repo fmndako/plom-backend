@@ -14,6 +14,7 @@ let signupEmailTemplate = defaultTemplates.signup;
 let passwordEmailTemplate = defaultTemplates.password;
 const frontendUrl = process.env.FRONTEND_URL;
 const UserService = require('../services/users');
+const Message = require('../../utilities/twilio');
 
 
 class UserController {
@@ -31,9 +32,11 @@ class UserController {
             if (!user) return res.processError(400, 'Error creating user');
             let otp = await OTPUtils.saveOTP(user, 'email', 'true');
             let url = frontendUrl;
-            url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            // url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
+            url = `${url}/verifyEmail/${user.id}/${otp}`;
             _sendEmailVerificationMail(user, url, 'Email Verification');
             _createUserConfig(user.id);
+            //Message.send(233, 'dfdsf');
             // user.url = url;
             logger.success('Sign up', {userId: user.id});
             return res.status(201).send(user);
@@ -200,8 +203,8 @@ async function _createUserConfig(id){
         reminderDays: 7,
         currency: 'NG',
         notification: true,
-    }
-    await db.userConfig.create(body);
+    };
+    await db.UserConfig.create(body);
     logger.info('user config created', {userId: id});
 }
 async function  _sendEmailVerificationMail (user, url, subject, otp){

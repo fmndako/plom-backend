@@ -5,26 +5,26 @@ let Sequelize = require('sequelize');
 /**
  * Actions summary:
  *
- * addColumn "lenderDeleted" to table "Loans"
+ * changeColumn "cleared" on table "Loans"
  *
  **/
 
 let info = {
-    'revision': 5,
+    'revision': 7,
     'name': 'noname',
-    'created': '2021-05-23T17:02:51.618Z',
+    'created': '2021-06-04T07:14:26.362Z',
     'comment': ''
 };
 
 let migrationCommands = function(transaction) {
     return [{
-        fn: 'addColumn',
+        fn: 'changeColumn',
         params: [
             'Loans',
-            'lenderDeleted',
+            'cleared',
             {
                 'type': Sequelize.BOOLEAN,
-                'field': 'lenderDeleted',
+                'field': 'cleared',
                 'defaultValue': false
             },
             {
@@ -35,10 +35,14 @@ let migrationCommands = function(transaction) {
 };
 let rollbackCommands = function(transaction) {
     return [{
-        fn: 'removeColumn',
+        fn: 'changeColumn',
         params: [
             'Loans',
-            'lenderDeleted',
+            'cleared',
+            {
+                'type': Sequelize.BOOLEAN,
+                'field': 'cleared'
+            },
             {
                 transaction: transaction
             }

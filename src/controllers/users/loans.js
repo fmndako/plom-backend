@@ -8,8 +8,14 @@ const { returnOnlyArrayProperties, sumArray } = require('../../../utilities/help
 class LoanController{
     async getLoan(req, res) {
         try {
-            let loan = await db.Loan.findOne({where: {deleted:{[Op.ne]: true} , id: req.params.id}, include: {model: db.Offset, as: 'offsets'}});
+            let loan = await db.Loan.findOne({where: {deleted:{[Op.ne]: true} , id: req.params.id}, 
+                include: [
+                    {model: db.Offset, as: 'offsets'}, 
+                    {model: db.User, as: 'User', attributes: db.attributes.userShort}, 
+                    {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
+                ],});
             if(!loan) throw Error();
+            processLoan(loan, req.user.id);
             res.send(loan);
         }
         catch(error){
@@ -20,8 +26,7 @@ class LoanController{
         try {
             let {page, limit, offset, startDate, endDate, type,  } = req.processReq(req);
             let userConfig = await db.UserConfig.findOne({where: {userId: req.user.id}});
-            console.log(userConfig);
-            let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7; 
+            let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7;
             let queryObj = { 
                 'All Loans': {},
                 'Lend': {type:'Lend'}, 
@@ -32,7 +37,8 @@ class LoanController{
                 'Due Loans': {dateToRepay: {[Op.lt]: new Date().addPeriod('Days', reminderDays).endOf('day')}},
             };
             let query = {};
-            if (req.query.type) query = queryObj[req.query.type];
+            if (req.query.type && queryObj[req.query.type]) query = queryObj[req.query.type];
+            console.log(query);
             if (req.query.active === 'true'){
                 query.cleared = {[Op.ne]: true};
             } else if (req.query.active === 'false'){
@@ -40,6 +46,7 @@ class LoanController{
             }
             query.deleted = {[Op.ne]: true};
             query.userId = req.user.id;
+            console.log(query);
             let loans = await db.Loan.findAndCountAll({where: query, 
                 include: [
                     {model: db.Offset, as: 'offsets'}, 
@@ -47,19 +54,9 @@ class LoanController{
                     {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
                 ],
                 order:[['createdAt', 'DESC']]});
+                
             for (let loan of loans.rows){
-                let bal, status;
-                if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
-                if(loan.cleared) status = 'Cleared';
-                else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
-                    status = 'Due Soon';
-                } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
-                    status = 'Due Today';
-                } else if (loan.dateToRepay < new Date().startOf('day')  ){
-                    status = 'Over Due';
-                } else status = 'Active';
-                loan.dataValues.status = status;
-                loan.dataValues.bal = bal;
+                processLoan(loan, null, reminderDays);
             }
             // loans.rows = loans.rows.splice(offset, limit);
             res.paginateRes(loans, page, limit );
@@ -125,7 +122,7 @@ class LoanController{
             await db.Loan.update(
                 { dateCleared: body.date, cleared: true},
                 { where: { id: req.params.id } }
-              );
+            );
             logger.success('Loan Cleared', {objectId: req.params.id, userId:req.user.id,});
             res.send({detail: 'Loan cleared successfully'});
         }
@@ -233,6 +230,23 @@ class LoanController{
     //     }
     // }
 }
-
+async function processLoan(loan, id, reminderDays){
+    if(!reminderDays) {
+        let userConfig = await db.UserConfig.findOne({where: {userId: id}});
+        reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7; 
+    }
+    let bal, status;
+    if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
+    if(loan.cleared) status = 'Cleared';
+    else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
+        status = 'Due Soon';
+    } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
+        status = 'Due Today';
+    } else if (loan.dateToRepay < new Date().startOf('day')  ){
+        status = 'Over Due';
+    } else status = 'Active';
+    loan.dataValues.status = status;
+    loan.dataValues.bal = bal;
+}
 
 module.exports = new LoanController();

@@ -61,7 +61,7 @@ class UserService {
         // if (user.accountLocked && withinLockedHours(user.timeLocked)) throw new Error('Account has been blocked. Try again in a few hours');
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {
-            throw new Error(`Invalid username or password`);
+            throw new Error('Invalid username or password');
 
             // if(!user.attemptCount || user.attemptCount < 5) {
             //     user.attemptCount = user.attemptCount + 1;
