@@ -122,6 +122,9 @@
                     "seqType": "Sequelize.INTEGER"
                 },
                 "cleared": {
+                    "defaultValue": {
+                        "value": false
+                    },
                     "field": "cleared",
                     "seqType": "Sequelize.BOOLEAN"
                 },
@@ -571,5 +574,5 @@
             "indexes": []
         }
     },
-    "revision": 6
+    "revision": 7
 }

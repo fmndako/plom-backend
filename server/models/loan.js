@@ -29,7 +29,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         loanItem: DataTypes.STRING,
         amount: DataTypes.INTEGER,
-        cleared: DataTypes.BOOLEAN,
+        cleared: {type: DataTypes.BOOLEAN,  defaultValue: false,},
         notify: DataTypes.BOOLEAN,
         dateTaken: DataTypes.DATE,
         dateToRepay: DataTypes.DATE,

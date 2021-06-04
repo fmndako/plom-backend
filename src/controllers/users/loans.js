@@ -15,6 +15,7 @@ class LoanController{
                     {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
                 ],});
             if(!loan) throw Error();
+            processLoan(loan, req.user.id);
             res.send(loan);
         }
         catch(error){
@@ -25,8 +26,7 @@ class LoanController{
         try {
             let {page, limit, offset, startDate, endDate, type,  } = req.processReq(req);
             let userConfig = await db.UserConfig.findOne({where: {userId: req.user.id}});
-            console.log(userConfig);
-            let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7; 
+            let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7;
             let queryObj = { 
                 'All Loans': {},
                 'Lend': {type:'Lend'}, 
@@ -54,19 +54,9 @@ class LoanController{
                     {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
                 ],
                 order:[['createdAt', 'DESC']]});
+                
             for (let loan of loans.rows){
-                let bal, status;
-                if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
-                if(loan.cleared) status = 'Cleared';
-                else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
-                    status = 'Due Soon';
-                } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
-                    status = 'Due Today';
-                } else if (loan.dateToRepay < new Date().startOf('day')  ){
-                    status = 'Over Due';
-                } else status = 'Active';
-                loan.dataValues.status = status;
-                loan.dataValues.bal = bal;
+                processLoan(loan, null, reminderDays);
             }
             // loans.rows = loans.rows.splice(offset, limit);
             res.paginateRes(loans, page, limit );
@@ -240,6 +230,23 @@ class LoanController{
     //     }
     // }
 }
-
+async function processLoan(loan, id, reminderDays){
+    if(!reminderDays) {
+        let userConfig = await db.UserConfig.findOne({where: {userId: id}});
+        reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7; 
+    }
+    let bal, status;
+    if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
+    if(loan.cleared) status = 'Cleared';
+    else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
+        status = 'Due Soon';
+    } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
+        status = 'Due Today';
+    } else if (loan.dateToRepay < new Date().startOf('day')  ){
+        status = 'Over Due';
+    } else status = 'Active';
+    loan.dataValues.status = status;
+    loan.dataValues.bal = bal;
+}
 
 module.exports = new LoanController();
