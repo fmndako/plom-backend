@@ -9,17 +9,17 @@ const client = require('twilio')(accountSid, authToken);
 class Message {
     async send(to, body){
         try {
-        let resp = await client.messages
+            let resp = await client.messages
                 .create({
                     from: 'whatsapp:+14155238886',
                     body: 'Your Plom code is 323243',
                     to: 'whatsapp:+2347066177668'
                 });
-            logger.info('Message sent')
-            }
-            catch (err){
-                logger.error(err);
-            }
+            logger.info('Message sent');
+        }
+        catch (err){
+            logger.error(err);
+        }
     }
 }
 

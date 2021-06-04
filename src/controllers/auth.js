@@ -203,7 +203,7 @@ async function _createUserConfig(id){
         reminderDays: 7,
         currency: 'NG',
         notification: true,
-    }
+    };
     await db.UserConfig.create(body);
     logger.info('user config created', {userId: id});
 }

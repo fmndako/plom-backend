@@ -1,6 +1,6 @@
 'use strict';
 
-var Sequelize = require('sequelize');
+let Sequelize = require('sequelize');
 
 /**
  * Actions summary:
@@ -9,91 +9,91 @@ var Sequelize = require('sequelize');
  *
  **/
 
-var info = {
-    "revision": 6,
-    "name": "noname",
-    "created": "2021-06-03T07:17:55.996Z",
-    "comment": ""
+let info = {
+    'revision': 6,
+    'name': 'noname',
+    'created': '2021-06-03T07:17:55.996Z',
+    'comment': ''
 };
 
-var migrationCommands = function(transaction) {
+let migrationCommands = function(transaction) {
     return [{
-        fn: "createTable",
+        fn: 'createTable',
         params: [
-            "ActivityLogs",
+            'ActivityLogs',
             {
-                "id": {
-                    "type": Sequelize.UUID,
-                    "field": "id",
-                    "primaryKey": true,
-                    "defaultValue": Sequelize.UUIDV1
+                'id': {
+                    'type': Sequelize.UUID,
+                    'field': 'id',
+                    'primaryKey': true,
+                    'defaultValue': Sequelize.UUIDV1
                 },
-                "level": {
-                    "type": Sequelize.STRING,
-                    "field": "level",
-                    "allowNull": false
+                'level': {
+                    'type': Sequelize.STRING,
+                    'field': 'level',
+                    'allowNull': false
                 },
-                "objectId": {
-                    "type": Sequelize.UUID,
-                    "field": "objectId"
+                'objectId': {
+                    'type': Sequelize.UUID,
+                    'field': 'objectId'
                 },
-                "userId": {
-                    "type": Sequelize.UUID,
-                    "onUpdate": "CASCADE",
-                    "onDelete": "CASCADE",
-                    "allowNull": true,
-                    "field": "userId",
-                    "references": {
-                        "model": "Users",
-                        "key": "id"
+                'userId': {
+                    'type': Sequelize.UUID,
+                    'onUpdate': 'CASCADE',
+                    'onDelete': 'CASCADE',
+                    'allowNull': true,
+                    'field': 'userId',
+                    'references': {
+                        'model': 'Users',
+                        'key': 'id'
                     },
-                    "foreignKey": true
+                    'foreignKey': true
                 },
-                "error": {
-                    "type": Sequelize.JSONB,
-                    "field": "error"
+                'error': {
+                    'type': Sequelize.JSONB,
+                    'field': 'error'
                 },
-                "status": {
-                    "type": Sequelize.STRING,
-                    "field": "status"
+                'status': {
+                    'type': Sequelize.STRING,
+                    'field': 'status'
                 },
-                "action": {
-                    "type": Sequelize.STRING,
-                    "field": "action"
+                'action': {
+                    'type': Sequelize.STRING,
+                    'field': 'action'
                 },
-                "category": {
-                    "type": Sequelize.STRING,
-                    "field": "category"
+                'category': {
+                    'type': Sequelize.STRING,
+                    'field': 'category'
                 },
-                "type": {
-                    "type": Sequelize.STRING,
-                    "field": "type"
+                'type': {
+                    'type': Sequelize.STRING,
+                    'field': 'type'
                 },
-                "message": {
-                    "type": Sequelize.STRING,
-                    "field": "message"
+                'message': {
+                    'type': Sequelize.STRING,
+                    'field': 'message'
                 },
-                "createdAt": {
-                    "type": Sequelize.DATE,
-                    "field": "createdAt",
-                    "allowNull": false
+                'createdAt': {
+                    'type': Sequelize.DATE,
+                    'field': 'createdAt',
+                    'allowNull': false
                 },
-                "updatedAt": {
-                    "type": Sequelize.DATE,
-                    "field": "updatedAt",
-                    "allowNull": false
+                'updatedAt': {
+                    'type': Sequelize.DATE,
+                    'field': 'updatedAt',
+                    'allowNull': false
                 }
             },
             {
-                "transaction": transaction
+                'transaction': transaction
             }
         ]
     }];
 };
-var rollbackCommands = function(transaction) {
+let rollbackCommands = function(transaction) {
     return [{
-        fn: "dropTable",
-        params: ["ActivityLogs", {
+        fn: 'dropTable',
+        params: ['ActivityLogs', {
             transaction: transaction
         }]
     }];
@@ -104,7 +104,7 @@ module.exports = {
     useTransaction: true,
     execute: function(queryInterface, Sequelize, _commands)
     {
-        var index = this.pos;
+        let index = this.pos;
         function run(transaction) {
             const commands = _commands(transaction);
             return new Promise(function(resolve, reject) {
@@ -112,7 +112,7 @@ module.exports = {
                     if (index < commands.length)
                     {
                         let command = commands[index];
-                        console.log("[#"+index+"] execute: " + command.fn);
+                        console.log('[#'+index+'] execute: ' + command.fn);
                         index++;
                         queryInterface[command.fn].apply(queryInterface, command.params).then(next, reject);
                     }

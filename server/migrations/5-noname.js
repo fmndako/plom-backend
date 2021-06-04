@@ -1,6 +1,6 @@
 'use strict';
 
-var Sequelize = require('sequelize');
+let Sequelize = require('sequelize');
 
 /**
  * Actions summary:
@@ -9,23 +9,23 @@ var Sequelize = require('sequelize');
  *
  **/
 
-var info = {
-    "revision": 5,
-    "name": "noname",
-    "created": "2021-05-23T17:02:51.618Z",
-    "comment": ""
+let info = {
+    'revision': 5,
+    'name': 'noname',
+    'created': '2021-05-23T17:02:51.618Z',
+    'comment': ''
 };
 
-var migrationCommands = function(transaction) {
+let migrationCommands = function(transaction) {
     return [{
-        fn: "addColumn",
+        fn: 'addColumn',
         params: [
-            "Loans",
-            "lenderDeleted",
+            'Loans',
+            'lenderDeleted',
             {
-                "type": Sequelize.BOOLEAN,
-                "field": "lenderDeleted",
-                "defaultValue": false
+                'type': Sequelize.BOOLEAN,
+                'field': 'lenderDeleted',
+                'defaultValue': false
             },
             {
                 transaction: transaction
@@ -33,12 +33,12 @@ var migrationCommands = function(transaction) {
         ]
     }];
 };
-var rollbackCommands = function(transaction) {
+let rollbackCommands = function(transaction) {
     return [{
-        fn: "removeColumn",
+        fn: 'removeColumn',
         params: [
-            "Loans",
-            "lenderDeleted",
+            'Loans',
+            'lenderDeleted',
             {
                 transaction: transaction
             }
@@ -51,7 +51,7 @@ module.exports = {
     useTransaction: true,
     execute: function(queryInterface, Sequelize, _commands)
     {
-        var index = this.pos;
+        let index = this.pos;
         function run(transaction) {
             const commands = _commands(transaction);
             return new Promise(function(resolve, reject) {
@@ -59,7 +59,7 @@ module.exports = {
                     if (index < commands.length)
                     {
                         let command = commands[index];
-                        console.log("[#"+index+"] execute: " + command.fn);
+                        console.log('[#'+index+'] execute: ' + command.fn);
                         index++;
                         queryInterface[command.fn].apply(queryInterface, command.params).then(next, reject);
                     }
