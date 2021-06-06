@@ -10,6 +10,8 @@ class UserController{
             let {emails, firstName, numbers, lastName } = req.body;
             if ( !firstName ) return res.processError(400, 'Invalid request, all fields are required');
             let body = {emails, numbers, firstName, lastName};
+            if (typeof body.emails === 'string') body.emails = JSON.parse(body.emails);
+            if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
             body.createdBySelf = false;
             let user = await UserService.createUser(body);
             let saved = await db.User.update(
