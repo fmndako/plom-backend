@@ -94,7 +94,7 @@ class UserController {
             _sendEmailVerificationMail(user, url, 'Email Verification');
             user.save();
             logger.success('Request email verification', {userId: req.user.id});
-            res.send({detail: 'Email verification link sent' + url});
+            res.send({detail: 'Email verification link sent'});
         } catch (error) {
             res.processError(400, 'Error requesting email verification');
         }
