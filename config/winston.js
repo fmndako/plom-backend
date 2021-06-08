@@ -5,7 +5,8 @@ const { createLogger, format, transports } = winston;
 const { combine, timestamp, printf } = format;
 require('dotenv').config();
 const category = 'Winston Config';
-const env = process.env.NODE_ENV || 'development'; 
+const log = process.env.LOG_CONSOLE; 
+
 
 let viewStackTrace = process.env.VIEW_ERROR_STACK_CONSOLE ? 'true' : false;
 
@@ -40,7 +41,7 @@ logger.stream = {
         logger.http(message);
     },
 };
-if (env === 'production') logger.transports.forEach((t) => (t.silent = true));
+if (log === 'false') logger.transports.forEach((t) => (t.silent = true));
 // logger.emitErrs = false;
 logger.info('Winston started', {meta : {category}});
 module.exports = logger;
