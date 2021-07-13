@@ -30,6 +30,7 @@ module.exports = (sequelize, DataTypes) => {
         loanItem: DataTypes.STRING,
         amount: DataTypes.INTEGER,
         cleared: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        // clearConfirmed:  {type: DataTypes.BOOLEAN,  defaultValue: false,},
         notify: DataTypes.BOOLEAN,
         dateTaken: DataTypes.DATE,
         dateToRepay: DataTypes.DATE,
@@ -38,6 +39,7 @@ module.exports = (sequelize, DataTypes) => {
         remarks: DataTypes.STRING,
         deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
         lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        // loanConfirmed: {type: DataTypes.BOOLEAN,  defaultValue: false,},
     });
 
     Loan.associate = (models) => {

@@ -17,7 +17,7 @@ deploy_production:
   variables:
     SSH_PK: $SSH_PK_PROD
   script:
-    - scripts/deploy.sh prod@46.101.78.130
+    - scripts/deploy.sh prod@139.59.182.58
   only:
     - master
 
@@ -38,6 +38,6 @@ deploy_staging:
   variables:
     SSH_PK: $SSH_PK_STAGING
   script:
-    - scripts/deploy_staging.sh staging@46.101.78.130
+    - scripts/deploy_staging.sh staging@139.59.182.58
   only:
     - staging
