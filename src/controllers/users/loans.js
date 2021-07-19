@@ -24,7 +24,7 @@ class LoanController{
     }
     async getLoans(req, res) {
         try {
-            let {page, limit, offset, startDate, endDate, type,  } = req.processReq(req);
+            let {page, limit, offset, startDate, endDate, type,  } = req.processReq();
             let userConfig = await db.UserConfig.findOne({where: {userId: req.user.id}});
             let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7;
             let queryObj = { 

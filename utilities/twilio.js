@@ -9,7 +9,7 @@ class Message {
     async sms(to, body){
         try {
             let content = {
-                from: phoneNumber,
+                from: '+2347066177668',
                 body,
                 to
             };

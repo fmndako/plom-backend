@@ -1,6 +1,7 @@
 const UserService = require('../../services/users.js');   
 const winston = require('../../services/winston');
 const db = require('../../../server/models');
+const Op = db.Sequelize.Op;
 const logger = new winston('User Management');
 const { getClientId } = require('../../services/encrypt'); 
 
@@ -63,10 +64,33 @@ class UserController{
     async getLoanUsers(req, res) {
         try {
             const search = {};
-            let { startDate, skipData, limitData } = req.query;
+            let { startDate, skipData, limitData } = req.processReq();
             // search.users = {[db.Sequelize.Op.contains]: req.user.users};
             let user = await db.User.findAll({where: {id: {[db.Sequelize.Op.in]: req.user.users}}});
             res.send(user);
+        }
+        catch(error){
+            res.processError(400, 'Error getting users', error);
+        }
+    }
+
+    async searchUser(req, res) {
+        try {
+            let { page, limit, startDate, skipData, limitData,  } = req.processReq();
+            let params = req.query.params;
+            let search = `%${params}%`;
+            let others = [ 
+                { email: {[Op.iLike]: search}},
+                { phoneNumber: {[Op.iLike]: search}},
+                { verifiedEmails:  {[Op.contains]: [search]}},
+                { verifiedNumbers: {[Op.contains]: `${search}`}}
+            ];        
+            let query = {};
+            query.deleted = {[Op.ne]: true};
+            query.createdBySelf = true;
+            query[Op.or] = others;
+            let user = await db.User.findAndCountAll({where: query});
+            res.paginateRes(user, page, limit );
         }
         catch(error){
             res.processError(400, 'Error getting users', error);

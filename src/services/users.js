@@ -24,6 +24,8 @@ class UserService {
     async createUser (body) {
         try{
             // console.log(body);
+            body.verifiedEmails = [];
+            body.verifiedNumbers = [];
             let user = await User.create(body);  
             return returnOnlyArrayProperties(user, db.attributes.user, true);     
         }

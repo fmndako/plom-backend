@@ -122,6 +122,9 @@
                     "seqType": "Sequelize.INTEGER"
                 },
                 "cleared": {
+                    "defaultValue": {
+                        "value": false
+                    },
                     "field": "cleared",
                     "seqType": "Sequelize.BOOLEAN"
                 },
@@ -240,6 +243,11 @@
                 "token": {
                     "allowNull": false,
                     "field": "token",
+                    "seqType": "Sequelize.STRING"
+                },
+                "value": {
+                    "allowNull": true,
+                    "field": "value",
                     "seqType": "Sequelize.STRING"
                 },
                 "type": {
@@ -452,6 +460,14 @@
                     "field": "emails",
                     "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
+                "verifiedNumbers": {
+                    "field": "verifiedNumbers",
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
+                },
+                "verifiedEmails": {
+                    "field": "verifiedEmails",
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
+                },
                 "phoneNumber": {
                     "field": "phoneNumber",
                     "seqType": "Sequelize.STRING"
@@ -571,5 +587,5 @@
             "indexes": []
         }
     },
-    "revision": 6
+    "revision": 9
 }
