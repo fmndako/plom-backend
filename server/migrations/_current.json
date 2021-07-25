@@ -128,9 +128,21 @@
                     "field": "cleared",
                     "seqType": "Sequelize.BOOLEAN"
                 },
-                "notify": {
-                    "field": "notify",
-                    "seqType": "Sequelize.BOOLEAN"
+                "lenderNotification": {
+                    "field": "lenderNotification",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "userNotification": {
+                    "field": "userNotification",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "lenderCleared": {
+                    "field": "lenderCleared",
+                    "seqType": "Sequelize.JSONB"
+                },
+                "userCleared": {
+                    "field": "userCleared",
+                    "seqType": "Sequelize.JSONB"
                 },
                 "dateTaken": {
                     "field": "dateTaken",
@@ -152,6 +164,14 @@
                     "field": "remarks",
                     "seqType": "Sequelize.STRING"
                 },
+                "security": {
+                    "field": "security",
+                    "seqType": "Sequelize.STRING"
+                },
+                "urgency": {
+                    "field": "urgency",
+                    "seqType": "Sequelize.STRING"
+                },
                 "deleted": {
                     "defaultValue": {
                         "value": false
@@ -165,6 +185,22 @@
                     },
                     "field": "lenderDeleted",
                     "seqType": "Sequelize.BOOLEAN"
+                },
+                "dateRequested": {
+                    "field": "dateRequested",
+                    "seqType": "Sequelize.DATE"
+                },
+                "approvalDate": {
+                    "field": "approvalDate",
+                    "seqType": "Sequelize.DATE"
+                },
+                "approvalStatus": {
+                    "field": "approvalStatus",
+                    "seqType": "Sequelize.STRING"
+                },
+                "approvalComments": {
+                    "field": "approvalComments",
+                    "seqType": "Sequelize.STRING"
                 },
                 "createdAt": {
                     "allowNull": false,
@@ -214,6 +250,13 @@
                 "remarks": {
                     "field": "remarks",
                     "seqType": "Sequelize.STRING"
+                },
+                "isRepaymentOption": {
+                    "defaultValue": {
+                        "value": false
+                    },
+                    "field": "isRepaymentOption",
+                    "seqType": "Sequelize.BOOLEAN"
                 },
                 "createdAt": {
                     "allowNull": false,
@@ -595,5 +638,5 @@
             "indexes": []
         }
     },
-    "revision": 10
+    "revision": 13
 }

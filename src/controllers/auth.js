@@ -9,7 +9,7 @@ const appRoot = require('app-root-path');
 const defaultTemplates = require(appRoot + '/templates');
 const Handlebars = require('express-handlebars').create();
 const jwt = require('jsonwebtoken');
-const { returnOnlyArrayProperties } = require('../../utilities/helpers');
+const { returnOnlyArrayProperties, phoneNumberValidator, checkPassword } = require('../../utilities/helpers');
 let signupEmailTemplate = defaultTemplates.signup;
 let passwordEmailTemplate = defaultTemplates.password;
 const frontendUrl = process.env.FRONTEND_URL;
@@ -220,14 +220,7 @@ class UserController {
     }
     
 }
-function checkPassword(str){
-    let re = /^(?=.*\d)(?=.*[!@#$%^'"&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-    return re.test(str);
-}
-function phoneNumberValidator(num){
-    let re = /\+1?\d{9,15}$/;
-    return re.test(num);
-}
+
 async function _createUserConfig(id){
     let body = {
         userId: id,

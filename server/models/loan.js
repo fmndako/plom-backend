@@ -29,18 +29,28 @@ module.exports = (sequelize, DataTypes) => {
         },
         loanItem: DataTypes.STRING,
         amount: DataTypes.INTEGER,
-        cleared: {type: DataTypes.BOOLEAN,  defaultValue: false,},
-        // clearConfirmed:  {type: DataTypes.BOOLEAN,  defaultValue: false,},
-        notify: DataTypes.BOOLEAN,
+        cleared: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
+        lenderNotification: DataTypes.JSONB, // notify and reminder date
+        userNotification: DataTypes.JSONB,
+        lenderCleared: DataTypes.JSONB,
+        userCleared: DataTypes.JSONB, // cleared and date;
         dateTaken: DataTypes.DATE,
         dateToRepay: DataTypes.DATE,
         dateCleared: DataTypes.DATE,
         repaymentOptions: DataTypes.STRING,
         remarks: DataTypes.STRING,
+        security: DataTypes.STRING,
+        urgency: DataTypes.STRING,
         deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
         lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        //request
+        dateRequested: DataTypes.DATE,
+        approvalDate: DataTypes.DATE,
+        approvalStatus: DataTypes.STRING,
+        approvalComments: DataTypes.STRING,
         // loanConfirmed: {type: DataTypes.BOOLEAN,  defaultValue: false,},
-    });
+    }); 
+
 
     Loan.associate = (models) => {
         Loan.belongsTo(models.User, { as: 'User', foreignKey: 'userId', onDelete: 'CASCADE'});
@@ -50,5 +60,9 @@ module.exports = (sequelize, DataTypes) => {
             as: 'offsets',
         });
     };
+    Loan.prototype.isOwner = function (userId){
+        return this.userId === userId;
+    };
+    
     return Loan;
 };
