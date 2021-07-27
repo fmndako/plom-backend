@@ -16,8 +16,6 @@ router.post('/', LoanController.createLoan);
 
 router.post('/request', LoanController.requestLoan);
 
-router.get('/request/:id/:lender/:type', LoanController.approveLoan); //mail approval
-
 router.post('/request/:id/:type', LoanController.approveLoan); // in app approval
 
 router.delete('/request/:id', LoanController.deleteRequest);
@@ -32,7 +30,7 @@ router.delete('/:id?', LoanController.deleteLoan);
 
 router.post('/:id/clear', LoanController.clearLoan);
 
-router.post('/:id/approval/:type', LoanController.approveLoan);
+router.post('/:id/request/:type', LoanController.approveLoan);
 
 router.post('/:id/offset', LoanController.createOffset);
 

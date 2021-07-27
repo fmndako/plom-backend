@@ -1,10 +1,15 @@
-const LoanService = require('../../services/loans'); 
 const Op = require('../../../server/models').Sequelize.Op;
 const db = require('../../../server/models');
 const winston = require('../../services/winston');
 const logger = new winston('Loan Management');
 const { returnOnlyArrayProperties, sumArray } = require('../../../utilities/helpers');
 const loanField = ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks', 'security'];
+const EmailService = require('../../services/email');
+const appRoot = require('app-root-path');
+const defaultTemplates = require(appRoot + '/templates');
+const Handlebars = require('express-handlebars').create();
+let requestEmailTemplate = defaultTemplates.request;
+const frontendUrl = process.env.FRONTEND_URL;
 
 async function getLoan(req, res) {
     try {
@@ -15,9 +20,10 @@ async function getLoan(req, res) {
                 {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
             ],});
         if(!loan) throw Error();
+        if (!res) return loan;
         processLoan(loan, req.user.id);
-        if (res) return res.send(loan);
-        return loan;
+        res.send(loan);
+        
     }
     catch(error){
         res.processError(400, 'Error retrieving loan', error);
@@ -182,7 +188,7 @@ async function requestLoan(req, res) {
     try {
         
         let loan = await createLoan(req, null);
-        //send notification to lender of loan request;
+        await sendRequestMail(await getLoan({params: {id: loan.id}}));
         logger.success('Loan request sent', {objectId: loan.id, userId:req.user.id,});
         logger.success('Loan request received', {objectId: loan.id, userId:req.body.lender});
         res.send(loan);
@@ -203,7 +209,8 @@ async function approveLoan(req, res) {
         loan.approvalStatus = req.params.type;
         loan.approvalComments = req.body.remarks;
         await loan.save();
-        //send notification to users of approval;
+        // sendRequestMail(loan, loan.User.email, req.params.type, false);
+        // sendRequestMail(loan, loan.Lender.email, req.params.type, true);
         logger.success(`${loan.approvalStatus} loan request`, {objectId: loan.id, userId:req.params.lender || req.user.id,});
         res.send(loan);
     }
@@ -291,6 +298,33 @@ async function processLoan(loan, id, reminderDays, isOwner){
     loan.dataValues.canEdit = isOwner;
 }
 
+function sendRequestMail(loan, email, type, self, cancelled){
+    try {
+        let rejected = type === 'reject';
+        let approved = type === 'approve';
+        let rejectLink = `${process.env.BACKEND_URL}noauth/loans/request/${loan.id}/${loan.lender}/reject`;
+        let approveLink = `${process.env.BACKEND_URL}noauth/loans/request/${loan.id}/${loan.lender}/approve`;
+        let fullname = loan.User.firstName + ' ' + loan.User.lastName;
+        let lender = loan.Lender.firstName + ' ' + loan.Lender.lastName;
+        let variables = {
+            ...loan.dataValues, fullname, lender,...loan.Lender.dataValues,
+            rejectLink,
+            approveLink,
+            frontendUrl, 
+            self, rejected, approved, cancelled
+        };
+        let mailTemplate;
+        mailTemplate = Handlebars._compileTemplate(requestEmailTemplate);
+        let mailContent = mailTemplate(variables);
+            
+        let payload = {
+            subject: 'Loan Request',
+        };
+        return EmailService.sendEmail(email, payload, mailContent );
+    } catch (error) {
+        logger.error(error);
+    }
+}
 module.exports = {
     getLoan, getLoans, createLoan,
     deleteLoan, updateLoan, 
