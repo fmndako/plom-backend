@@ -1,3 +1,4 @@
+'use strict';
 const UserService = require('../../services/users.js');   
 const winston = require('../../services/winston');
 const db = require('../../../server/models');
@@ -14,7 +15,7 @@ class UserController{
             let body = {emails, numbers, firstName, lastName};
             if (typeof body.emails === 'string') body.emails = JSON.parse(body.emails);
             if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
-            let nums = numbers.filter(n => phoneNumberValidator(n));
+            let nums = body.numbers.filter(n => phoneNumberValidator(n));
             if(nums.length) res.processError('400', 'Invalid phone number(s)');
             body.createdBySelf = false;
             let user = await UserService.createUser(body);
