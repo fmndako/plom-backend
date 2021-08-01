@@ -31,8 +31,9 @@ async function getLoan(req, res) {
 }
 async function getLoans(req, res) {
     try {
-        let {page, limit, offset, startDate, endDate, type  } = req.processReq();
+        let {page, limit, offset, startDate, endDate, type,  } = req.processReq();
         let request = req.query.request;
+        let lender = req.query.lender;
         let userConfig = await db.UserConfig.findOne({where: {userId: req.user.id}});
         let reminderDays = userConfig &&  userConfig.reminderDays ? userConfig.reminderDays : 7;
         let queryObj = { 
@@ -57,6 +58,9 @@ async function getLoans(req, res) {
             query.approvalStatus = {[Op.in]: ['pending', 'rejected']};
         } else {
             query.approvalStatus = {[Op.or]: [{[Op.eq]: null,}, {[Op.eq]: 'approved' }]}; 
+        }
+        if (lender){
+            req.query.lender = lender;
         }
         if (req.query.type && queryObj[req.query.type]) query = {...query, ...queryObj[req.query.type]};
         console.log(query);
