@@ -13,6 +13,12 @@ const winston = require('./src/services/winston');
 const logger = new winston('Server logs');
 const {resProcessor, reqProcessor} = require('./src/middleware/processor');
 require('./utilities/prototypes');
+const exphbs  = require('express-handlebars');
+
+app.engine('handlebars', exphbs());
+app.set('view engine', 'handlebars');
+
+
 // Parse the payload and add to request.body
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
@@ -26,6 +32,18 @@ app.get('/', async function(req, res) {
     res.send('App works fine!!');
 
 });
+
+// const Currency = require('currency-list');
+// const CurrencyList = Currency.default;
+
+// const fs = require('fs');
+
+// fs.writeFile('currency.js', JSON.stringify(CurrencyList.currencyList.af), function(err) {
+//     if(err) {
+//         return console.log(err);
+//     }
+//     console.log('The file was saved!');
+// }); 
 // All route should be added to the index.js file inside the route folder
 app.use('/api/v1', route);
 app.use((err, req, res, next)=> {

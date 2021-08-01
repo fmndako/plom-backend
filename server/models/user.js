@@ -29,6 +29,14 @@ module.exports = (sequelize, DataTypes) => {
         acceptedTerms: { type: DataTypes.BOOLEAN, defaultValue: false},
         numbers: DataTypes.ARRAY(DataTypes.STRING),
         emails: DataTypes.ARRAY(DataTypes.STRING),
+        verifiedNumbers:{
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: []
+        },
+        verifiedEmails: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: []
+        },
         phoneNumber: DataTypes.STRING,
         businessName: DataTypes.STRING,
         accountType: DataTypes.STRING,

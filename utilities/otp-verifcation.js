@@ -6,9 +6,10 @@ let Otp = db.Token;
 
 
 class OTPVerification {
-    async generateOTP () {
+    async generateOTP (length) {
         try {
-            return Math.floor(100000 + Math.random() * 900000);
+            if(!length) length = 8;
+            return Math.floor(Math.pow(10, length-1) + Math.random() * (Math.pow(10, length) - Math.pow(10, length-1) - 1));
         } catch (e) {
             logger.error('Error generating OTP');
         }
@@ -24,10 +25,10 @@ class OTPVerification {
         let time = type === 'email'? 3600 * 24 : 30 * 60;
         return (new Date().getTime() - new Date(date).getTime() )/ 3600 > time;
     }
-    async saveOTP (user, type, otp) {
+    async saveOTP (user, type, otp, value) {
         try {
             user.verifyOtp = await Otp.findAll({where: {userId : user.id}});
-            let userOtp = user.verifyOtp && user.verifyOtp.length > 0 ? user.verifyOtp.filter(t => t.type === type) : [];
+            let userOtp = user.verifyOtp && user.verifyOtp.length > 0 ? user.verifyOtp.filter(t => t.value === value) : [];
 
             if (userOtp.length < 1 ) {
                 userOtp = Otp.build();
@@ -36,9 +37,10 @@ class OTPVerification {
                 userOtp = userOtp[0];
             }
             if (otp) {   
-                otp = await this.generateOTP();
+                otp = await this.generateOTP(8);
                 userOtp.token = otp + ''; 
             }
+            userOtp.value = value;
             userOtp.type = type;
             userOtp.dateCreated = new Date();
             userOtp.verified = false;
@@ -50,26 +52,35 @@ class OTPVerification {
             logger.error('Error saving OTP', {error:e});
         }
     }
-    
-    async verifyOTP (user, type, res, otp) {
+    saveOTPstatus(type, user, value){
+        if(type === 'password-reset') return;
+        let list = user.verifiedEmails;
+        if (type === 'phone') list = user.verifiedNumbers;
+        if(!list) list = [];
+        if(!list.includes(value)) list.push(value);
+        if (type === 'email') user.verifiedEmail = list;
+        else user.verifiedNumbers = list;
+    }
+    async verifyOTP (user, type, res, otp, value) {
+        let types = {phone: 'Phone', email: 'Email', 'password-reset': 'Password Reset'};
+        let typeMessage = types[type] || '';
         try {
             user.verifyOtp = await Otp.findAll({where: {userId : user.id}});
-            let userOtp = user.verifyOtp && user.verifyOtp.length > 0 ? user.verifyOtp.filter(t => t.type === type) : [];
+            let userOtp = user.verifyOtp && user.verifyOtp.length > 0 ? user.verifyOtp.filter(t => t.value === value) : [];
             // if verified, user did not request verification. return 400
-            let passwordReset = type === 'password-reset' ? 'Password reset: ' : '';
-
-            if (userOtp.length < 1 || userOtp[0].verified) return res.processError(400, passwordReset + 'Email verification request not found');
-            let message = 'Email verification successful';
+            if (userOtp.length < 1 || userOtp[0].verified) return res.processError(400, typeMessage + ' verification request not found');
+            let message = typeMessage + ' verification successful';
             userOtp = userOtp[0];
-            if (!this._expired(userOtp.dateCreated)) return res.processError(400, passwordReset + 'Email verification request has expired');
+            if (!this._expired(userOtp.dateCreated)) return res.processError(400, typeMessage + ' verification request has expired');
             if (!otp) {
                 user.isActive = true;
                 user.status = 'active';
                 userOtp.verified = true;
                 userOtp.save();
+                this.saveOTPstatus(type, user, value);
                 await user.save();
-                logger.success(passwordReset + 'Email verification', {userId: user.id});
-                return res.send({detail: message});
+                logger.success(typeMessage + ' verification', {userId: user.id});
+                return message;
             } 
             else {
                 if (userOtp.token === otp) {
@@ -77,17 +88,18 @@ class OTPVerification {
                     user.status = 'active';
                     userOtp.verified = true;
                     userOtp.save();
+                    this.saveOTPstatus(type, user, value);
                     await user.save();
-                    logger.success(passwordReset + 'Email verification', {userId: user.id});
-                    if (type === 'password-reset') return res.send({userId: userOtp.userId});
-                    return res.send({detail: message});
+                    logger.success(typeMessage + ' verification', {userId: user.id});
+                    if (type === 'password-reset') return {userId: userOtp.userId};
+                    return message;
                 }
                 else {
-                    return res.processError(404, passwordReset + 'Invalid token or Email verification request has expired');
+                    return res.processError(404, typeMessage + ' - Invalid token or verification request has expired');
                 }
             } 
-        } catch (e) {
-            logger.error('Error verifying email', {error:e});
+        } catch (error) {
+            logger.error( typeMessage + ' verification error', {error});
         }
     }
    

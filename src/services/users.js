@@ -24,6 +24,8 @@ class UserService {
     async createUser (body) {
         try{
             // console.log(body);
+            body.verifiedEmails = [];
+            body.verifiedNumbers = [];
             let user = await User.create(body);  
             return returnOnlyArrayProperties(user, db.attributes.user, true);     
         }
@@ -57,7 +59,7 @@ class UserService {
         if (user.length < 1) {
             throw new Error('Invalid username or password');
         }
-        user = user[0];
+        user = user[user.length - 1];
         // if (user.accountLocked && withinLockedHours(user.timeLocked)) throw new Error('Account has been blocked. Try again in a few hours');
         const isPasswordMatch = await bcrypt.compare(password, user.password);
         if (!isPasswordMatch) {

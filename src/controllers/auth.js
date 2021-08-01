@@ -9,7 +9,7 @@ const appRoot = require('app-root-path');
 const defaultTemplates = require(appRoot + '/templates');
 const Handlebars = require('express-handlebars').create();
 const jwt = require('jsonwebtoken');
-const { returnOnlyArrayProperties } = require('../../utilities/helpers');
+const { returnOnlyArrayProperties, phoneNumberValidator, checkPassword } = require('../../utilities/helpers');
 let signupEmailTemplate = defaultTemplates.signup;
 let passwordEmailTemplate = defaultTemplates.password;
 const frontendUrl = process.env.FRONTEND_URL;
@@ -30,14 +30,12 @@ class UserController {
             if (users.length > 0) return res.processError(400, 'User with email already exist');
             let user = await UserService.createUser(body);
             if (!user) return res.processError(400, 'Error creating user');
-            let otp = await OTPUtils.saveOTP(user, 'email', 'true');
+            let otp = await OTPUtils.saveOTP(user, 'email', 'true', user.email);
             let url = frontendUrl;
             // url = `${url}/verifyEmail?ref=${user.id}&token=${otp}`;
             url = `${url}/verifyEmail/${user.id}/${otp}`;
             _sendEmailVerificationMail(user, url, 'Email Verification');
             _createUserConfig(user.id);
-            //Message.send(233, 'dfdsf');
-            // user.url = url;
             logger.success('Sign up', {userId: user.id});
             return res.status(201).send(user);
         } catch (error) {
@@ -88,13 +86,30 @@ class UserController {
         try {
             let user = await UserService.getUser(req.user.id);
             if (!user) return res.processError(400, 'User does not exist');
-            let otp = await OTPUtils.saveOTP(user, 'email', true);
+            let otp = await OTPUtils.saveOTP(user, 'email', true, user.email);
             let url = frontendUrl;
             url = `${url}/verifyEmail/${user.id}/${otp}`;
+            _sendPhoneVerificationCode(user, otp, 'verifyPhone');
+
             _sendEmailVerificationMail(user, url, 'Email Verification');
-            user.save();
+            // user.save();
             logger.success('Request email verification', {userId: req.user.id});
             res.send({detail: 'Email verification link sent'});
+        } catch (error) {
+            res.processError(400, 'Error requesting email verification', error);
+        }
+    }
+    async requestPhoneVerificationCode(req, res){
+        try {
+            let user = await UserService.getUser(req.user.id);
+            if (!user) return res.processError(400, 'User does not exist');
+            let phone = req.body.phone || user.phoneNumber;
+            let valid = await phoneNumberValidator(phone);
+            if(!valid) return res.processError(400, 'Phone number must be entered in the format: +999999999. Up to 15 digits allowed.');
+            let otp = await OTPUtils.saveOTP(user, 'phone', true, phone);
+            _sendPhoneVerificationCode(user, otp, 'verifyPhone');
+            logger.success('Request phone verification', {userId: req.user.id});
+            res.send({detail: 'Phone verification code sent'});
         } catch (error) {
             res.processError(400, 'Error requesting email verification');
         }
@@ -105,7 +120,19 @@ class UserController {
             if (!user) return res.processError(400, 'user does not exist');
             let type = 'email';
             if (req.params.verifyEmail === 'passwordReset') type = 'password-reset';
-            return await OTPUtils.verifyOTP(user, type, res, req.params.otp);
+            let details = await OTPUtils.verifyOTP(user, type, res, req.params.otp, user.email);
+            return res.render('response', { details});
+        } catch (error) {
+            res.processError(400, error);
+        }
+    }
+    async verifyPhone(req, res){
+        try {
+            let user = await UserService.getUser(req.user.id);
+            if (!user) return res.processError(400, 'user does not exist');
+            let type = 'phone';
+            let details = await OTPUtils.verifyOTP(user, type, res, req.body.otp, req.body.phone);
+            return res.send({detail: 'Phone number verified'});
         } catch (error) {
             res.processError(400, error);
         }
@@ -149,7 +176,7 @@ class UserController {
             if (user && user.length < 1) return res.processError(400, 'user does not exist');
             user = user[0];
             let url = frontendUrl;
-            let otp = await OTPUtils.saveOTP(user, 'password-reset', true);
+            let otp = await OTPUtils.saveOTP(user, 'password-reset', true, user.email);
             url = `${url}/passwordReset?ref=${user.id}&token=${otp}`;
             _sendEmailVerificationMail(user, url, 'password-reset');
             user = user.toJSON(); 
@@ -193,15 +220,12 @@ class UserController {
     }
     
 }
-function checkPassword(str){
-    let re = /^(?=.*\d)(?=.*[!@#$%^'"&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
-    return re.test(str);
-}
+
 async function _createUserConfig(id){
     let body = {
         userId: id,
         reminderDays: 7,
-        currency: 'NG',
+        currency: 'NGN',
         notification: true,
     };
     await db.UserConfig.create(body);
@@ -228,6 +252,14 @@ async function  _sendEmailVerificationMail (user, url, subject, otp){
             subject: subject
         };
         return EmailService.sendEmail(user.email, payload, mailContent );
+    } catch (error) {
+        logger.error(error);
+    }
+}
+
+async function  _sendPhoneVerificationCode (number, body){
+    try {
+        return Message.sms(number, body);
     } catch (error) {
         logger.error(error);
     }

@@ -8,10 +8,10 @@ const resProcessor = (req, res, next) => {
     try {
         res.processError = function(code, error, data){
             if(req.user) logger.error(error, {userId: req.user.id, error: {message: data? data.message : '', stack: data? data.stack : ''}});
-            error = error.message ? error.message : error;
+            error = typeof error === 'string'? error : error.message;
             code = code ? code : 400;
             let resp = {error: error};
-            if (data) resp.data = data;
+            if (data) resp.data = {...data};
             this.status(code).send(resp);
         };
         next();      
