@@ -1,6 +1,7 @@
 
 'use strict';
 const db = require('../../server/models');
+const Op = db.Sequelize.Op;
 const winston = require('../services/winston');
 const logger = new winston('User Management');
 const EmailService = require('../services/email');
@@ -20,14 +21,21 @@ const Message = require('../../utilities/twilio');
 class UserController {
     async signup (req, res) {
         try {
-            let {email, password, firstName, lastName, phoneNumber} = req.body;
+            const {email, password, firstName, lastName, phoneNumber} = req.body;
             if (!email || !password || !firstName || !lastName || !phoneNumber) return res.processError(400, 'Invalid request, all fields are required');
-            let valid = await checkPassword(password);
+            let valid = checkPassword(password);
             if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
+            valid = phoneNumberValidator(phoneNumber);
+            if(!valid) return res.processError(400, 'Phone numbers must be entered in the format: +999999999. Up to 15 digits allowed.');
             let body = {email, password, firstName, lastName, phoneNumber};
-            let users = await UserService.getUsers({email:email, createdBySelf: true});
-            // if(users.length) = await UserService.getUsers({username:username, createdBySelf: true});
-            if (users.length > 0) return res.processError(400, 'User with email already exist');
+            // body.numbers = req.body.numbers;
+            // body.emails = req.body.emails;
+            body.type = 'user';
+            // body.isActive = true;
+            let users = await UserService.getRegisteredUsers('email', email, 'user');
+            if (users.length > 0) return res.processError(400, 'This email is already associated with another account, login instead');
+            users = await UserService.getRegisteredUsers('phoneNumber', phoneNumber, 'user');
+            if (users.length > 0) return res.processError(400, 'This number is already associated with another account, login instead');
             let user = await UserService.createUser(body);
             if (!user) return res.processError(400, 'Error creating user');
             let otp = await OTPUtils.saveOTP(user, 'email', 'true', user.email);
@@ -37,7 +45,7 @@ class UserController {
             _sendEmailVerificationMail(user, url, 'Email Verification');
             _createUserConfig(user.id);
             logger.success('Sign up', {userId: user.id});
-            return res.status(201).send(user);
+            return res.status(201).send({detail: 'Sign up successful, please login'});
         } catch (error) {
             res.processError(400, 'Error creating user', error);
         }
@@ -104,7 +112,7 @@ class UserController {
             let user = await UserService.getUser(req.user.id);
             if (!user) return res.processError(400, 'User does not exist');
             let phone = req.body.phone || user.phoneNumber;
-            let valid = await phoneNumberValidator(phone);
+            let valid = phoneNumberValidator(phone);
             if(!valid) return res.processError(400, 'Phone number must be entered in the format: +999999999. Up to 15 digits allowed.');
             let otp = await OTPUtils.saveOTP(user, 'phone', true, phone);
             _sendPhoneVerificationCode(user, otp, 'verifyPhone');
@@ -142,7 +150,7 @@ class UserController {
     //         let email = req.body.email ? req.body.email : req.user.email;
     //         let otp = req.body.otp;
     //         if(!email || !otp) return res.processError(400, 'Bad request');
-    //         let user = await UserService.getUsers({email:email});
+    //         let user = await UserService.getRegisteredUsers({email:email});
     //         if (user && user.length < 1) return res.processError(400, 'user does not exist');
     //         user = user[0];
     //         let verified = await OTPUtils.verifyOTP(otp, user, 'email');
@@ -172,7 +180,7 @@ class UserController {
         try {
             let email = req.body.email ? req.body.email : req.user.email;
             if(!email) return res.processError(400, 'Enter a valid email request');
-            let user = await UserService.getUsers({email:email});
+            let user = await UserService.getRegisteredUsers({email:email});
             if (user && user.length < 1) return res.processError(400, 'user does not exist');
             user = user[0];
             let url = frontendUrl;

@@ -649,20 +649,6 @@
                     "field": "confirmed",
                     "seqType": "Sequelize.BOOLEAN"
                 },
-                "deleted": {
-                    "defaultValue": {
-                        "value": false
-                    },
-                    "field": "deleted",
-                    "seqType": "Sequelize.BOOLEAN"
-                },
-                "lenderDeleted": {
-                    "defaultValue": {
-                        "value": false
-                    },
-                    "field": "lenderDeleted",
-                    "seqType": "Sequelize.BOOLEAN"
-                },
                 "dateConfirmed": {
                     "field": "dateConfirmed",
                     "seqType": "Sequelize.DATE"
@@ -1123,5 +1109,5 @@
             "indexes": []
         }
     },
-    "revision": 2
+    "revision": 1
 }

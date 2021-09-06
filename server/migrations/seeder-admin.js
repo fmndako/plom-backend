@@ -16,6 +16,7 @@ module.exports = {
             updatedAt: new Date(),
             firstName: 'Admin',
             lastName: 'Admin',
+            type: 'user',
             id: v4()
         }]);
     },

@@ -6,7 +6,6 @@ const morgan = require('morgan');
 // Models
 const app = express();
 const cors = require('cors');
-const config = require('./config/index.js');
 const db = require('./server/models');
 const route = require('./src/routes/routes');
 const winston = require('./src/services/winston');
@@ -29,7 +28,7 @@ app.use(reqProcessor);
 app.use(cors());
 app.get('/', async function(req, res) {
    
-    res.send('App works fine!!');
+    res.send('App works!!');
 
 });
 
@@ -63,6 +62,7 @@ process.on('uncaughtException', function(error) {
     logger.error('uncaughtException', {error});
 });
 
-app.listen(config.port);
 
-console.log(`Listening @ port - ${config.port}`);
+
+module.exports = app;
+

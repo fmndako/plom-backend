@@ -3,7 +3,7 @@ const db = require('../../../server/models');
 const winston = require('../../services/winston');
 const logger = new winston('Loan Management');
 const { returnOnlyArrayProperties, sumArray } = require('../../../utilities/helpers');
-const loanField = ['amount', 'type', 'notify', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks', 'security'];
+const loanField = ['amount', 'type', 'notify', 'duration', 'options', 'userNotification', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks', 'option', 'duration', 'security'];
 const EmailService = require('../../services/email');
 const appRoot = require('app-root-path');
 const defaultTemplates = require(appRoot + '/templates');
@@ -72,7 +72,17 @@ async function getLoans(req, res) {
         let loans = await db.Loan.findAndCountAll({where: query, 
             include: [
                 {model: db.Offset, as: 'offsets'}, 
-                {model: db.User, as: 'User', attributes: db.attributes.userShort}, 
+                {
+                    model: db.User, 
+                    as: 'User', 
+                    attributes: db.attributes.userShort,
+                    // include: [
+                    //     {
+                    //         model: db.UserConfig
+                    //     }
+                    // ]
+
+                }, 
                 {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
             ],
             order:[['createdAt', 'DESC']]});
@@ -91,7 +101,7 @@ async function createLoan(req, res) {
     try {
         let body = returnOnlyArrayProperties(req.body, loanField);
         body.userId = req.user.id;
-        if(!body.lender) throw 'Please enter lender/borrower details';
+        if(!body.lender) throw 'Please enter user details';
         let lender = await db.User.findByPk(body.lender, {attributes: db.attributes.user,});
         if(!lender) throw 'lender cannot be null';
         if(!res) {

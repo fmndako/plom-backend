@@ -7,6 +7,7 @@ const filterDate = process.env.FILTER_START_DATE || '01 Oct 2020';
 const resProcessor = (req, res, next) => {
     try {
         res.processError = function(code, error, data){
+            console.log(error, data);
             if(req.user) logger.error(error, {userId: req.user.id, error: {message: data? data.message : '', stack: data? data.stack : ''}});
             error = typeof error === 'string'? error : error.message;
             code = code ? code : 400;

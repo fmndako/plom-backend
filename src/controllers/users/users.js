@@ -10,20 +10,28 @@ const { phoneNumberValidator } = require('../../../utilities/helpers');
 class UserController{
     async createLoanUser(req, res) {
         try {
-            let {emails, firstName, numbers, lastName } = req.body;
+            let {emails, firstName, numbers, lastName} = req.body;
             if ( !firstName ) return res.processError(400, 'Invalid request, all fields are required');
             let body = {emails, numbers, firstName, lastName};
             if (typeof body.emails === 'string') body.emails = JSON.parse(body.emails);
             if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
-            let nums = body.numbers.filter(n => phoneNumberValidator(n));
-            if(nums.length) res.processError('400', 'Invalid phone number(s)');
-            body.createdBySelf = false;
+            let query = {creatorId: req.user.id};
+            for (let n of body.emails){
+                // if  (!phoneNumberValidator(n))return res.processError('400', 'Invalid emails');
+                let users = await UserService.getRegisteredUsers('email', n, 'private', query);
+                if (users.length > 0) return res.processError(400, 'User with email already exist, use the search function instead');
+            }
+            for (let n of body.numbers){
+                if  (!phoneNumberValidator(n)) return res.processError('400', 'Invalid phone number');
+                let users = await UserService.getRegisteredUsers('phoneNumber', n, 'private', query);
+                if (users.length > 0) return res.processError(400, 'User with phone number already exist, use the search function instead');
+            }
+            body.type = 'private';
             let user = await UserService.createUser(body);
-            let saved = await db.User.update(
-                {'users': db.sequelize.fn('array_append', db.Sequelize.col('users'), user.id)},
-                {'where': {'id': req.user.id}});
             if (!user) return res.processError(400, 'Error creating user');
-            logger.success('Added new user', {userId: req.user.id});
+            user.creatorId = req.user.id;
+            await user.save();
+            logger.success('Added new loan user', {userId: req.user.id});
             return res.status(201).send(user);
         } catch (error) {
             res.processError(400, 'Error creating user', error);
@@ -34,6 +42,19 @@ class UserController{
         try {
             let {emails, firstName, numbers, lastName } = req.body;
             let body = {emails, numbers, firstName, lastName};
+            if (typeof body.emails === 'string') body.emails = JSON.parse(body.emails);
+            if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
+            let query = {creatorId: req.user.id, id: {[Op.ne]: req.params.id}};
+            for (let n of body.emails){
+                // if  (!phoneNumberValidator(n))return res.processError('400', 'Invalid emails');
+                let users = await UserService.getRegisteredUsers('email', n, 'private', query);
+                if (users.length > 1) return res.processError(400, 'User with email already exist, use the search function instead');
+            }
+            for (let n of body.numbers){
+                if  (!phoneNumberValidator(n)) return res.processError('400', 'Invalid phone number');
+                let users = await UserService.getRegisteredUsers('phoneNumber', n, 'private', query );
+                if (users.length > 1) return res.processError(400, 'User with phone number already exist, use the search function instead');
+            }
             let user = await UserService.updateUser(req.params.id, body);
             if (!user) return res.processError(400, 'Error creating user');
             logger.success('Update loan user', {userId: req.user.id});
@@ -44,12 +65,8 @@ class UserController{
     }
     async deleteLoanUser(req, res) {
         try {
-            if(!req.user.users.includes(req.params.id)) return res.processError(400, 'User doesnt exist');
-            let user = await db.User.destroy({where: {id: req.params.id}});
-            let saved = await db.User.update(
-                {'users': db.sequelize.fn('array_remove', db.Sequelize.col('users'), req.params.id)},
-                {'where': {'id': req.user.id}});
-            if (!user) return res.processError(400, 'Removed loan user');
+            let user = await db.User.destroy({where: {id: req.params.id, creatorId: req.user.id}});
+            if (!user) return res.processError(400, 'User not found');
             logger.success('deleted user', {userId: req.user.id});
             return res.send({detail: 'user deleted successfully'});
         } catch (error) {
@@ -70,7 +87,7 @@ class UserController{
             const search = {};
             let { startDate, skipData, limitData } = req.processReq();
             // search.users = {[db.Sequelize.Op.contains]: req.user.users};
-            let user = await db.User.findAll({where: {id: {[db.Sequelize.Op.in]: req.user.users}}});
+            let user = await db.User.findAll({where: {creatorId: req.user.id}});
             res.send(user);
         }
         catch(error){

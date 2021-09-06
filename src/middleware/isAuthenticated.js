@@ -9,7 +9,10 @@ const auth = async(req, res, next) => {
         const token = req.header('Authorization') ? req.header('Authorization').replace('Bearer ', '') : null;
         if (!token){return res.processError(401, 'Token not provided');}
         let data = jwt.verify(token, process.env.JWT_KEY);
-        let user = await db.User.findOne({where: {id: data.id, deleted: {[Op.ne]: true}}});
+        let user = await db.User.findOne(
+            {
+                where: {id: data.id, deleted: {[Op.ne]: true}},
+            });
         if (!user) {
             throw new Error();
         }
@@ -20,6 +23,7 @@ const auth = async(req, res, next) => {
         if (expired) return res.processError(401, 'Token has expired');
         user.tokenCreatedAt = new Date();
         await user.save();
+       
         if (user.isActive || req.path.includes('/logout') || req.path.includes('/details') || req.path.includes('/requestVerification')) {
             req.user = user;
             req.token = token;

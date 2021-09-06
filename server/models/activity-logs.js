@@ -14,14 +14,6 @@ module.exports = (sequelize, DataTypes) => {
         objectId: {
             type: DataTypes.UUID,
         },
-        userId: {
-            type: DataTypes.UUID,
-            foreignKey: true,
-            references: {
-                model: 'Users',
-                key: 'id'
-            }
-        },
         error: DataTypes.JSONB,
         status: DataTypes.STRING,
         action: DataTypes.STRING,
@@ -31,7 +23,6 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     ActivityLog.associate = (models) => {
-        ActivityLog.belongsTo(models.User, {foreignKey: 'userId', onDelete: 'CASCADE'});
     };
     return ActivityLog;
 };

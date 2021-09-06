@@ -7,10 +7,6 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: DataTypes.UUIDV1,
             primaryKey: true
         },
-        type: {
-            type: DataTypes.STRING,
-            allowNull: false,
-        },
         lender: {
             type: DataTypes.UUID,
             foreignKey: true,
@@ -27,34 +23,41 @@ module.exports = (sequelize, DataTypes) => {
                 key: 'id'
             }
         },
-        loanItem: DataTypes.STRING,
+        assets: DataTypes.STRING,
+        type: {type: DataTypes.STRING,  defaultValue: 'money',}, //money or other assets
         amount: DataTypes.INTEGER,
+        quantity: DataTypes.INTEGER,
         cleared: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
+        dateTaken: DataTypes.DATE,
         lenderNotification: DataTypes.JSONB, // notify and reminder date
         userNotification: DataTypes.JSONB,
         lenderCleared: DataTypes.JSONB,
-        userCleared: DataTypes.JSONB, // cleared and date;
-        dateTaken: DataTypes.DATE,
+        userCleared: DataTypes.JSONB, // c
+        duration: DataTypes.JSONB, // notify and reminder date {days before} number of days before and once, on every day 
         dateToRepay: DataTypes.DATE,
         dateCleared: DataTypes.DATE,
-        repaymentOptions: DataTypes.STRING,
-        remarks: DataTypes.STRING,
+        repaymentOption: DataTypes.STRING,
+        options: DataTypes.JSONB,
         security: DataTypes.STRING,
         urgency: DataTypes.STRING,
-        deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
-        lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,},
-        //request
+        status: DataTypes.STRING,
         dateRequested: DataTypes.DATE,
         approvalDate: DataTypes.DATE,
         approvalStatus: DataTypes.STRING,
         approvalComments: DataTypes.STRING,
-        // loanConfirmed: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        confirmed: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
+        deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
+        lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
+        dateConfirmed: DataTypes.DATE,
     }); 
 
 
     Loan.associate = (models) => {
+        Loan.belongsTo(models.User, { as: 'creator', onDelete: 'CASCADE'});
+
         Loan.belongsTo(models.User, { as: 'User', foreignKey: 'userId', onDelete: 'CASCADE'});
         Loan.belongsTo(models.User, { as: 'Lender', foreignKey: 'lender', onDelete: 'CASCADE' });
+
         Loan.hasMany(models.Offset, {
             foreignKey: 'loanId',
             as: 'offsets',

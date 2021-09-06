@@ -11,7 +11,10 @@ module.exports = (sequelize, DataTypes) => {
         },
         email: {
             type: DataTypes.STRING,
-            validate: {isEmail: true}
+            validate: { isEmail: true },
+        },
+        phoneNumber: {
+            type: DataTypes.STRING,
         },
         firstName: DataTypes.STRING,
         middleName: DataTypes.STRING,
@@ -21,12 +24,17 @@ module.exports = (sequelize, DataTypes) => {
         salutation: DataTypes.STRING,
         isAdmin: { type: DataTypes.BOOLEAN, defaultValue: false},
         isSuperadmin: { type: DataTypes.BOOLEAN, defaultValue: false},
-        deleted: { type: DataTypes.BOOLEAN, defaultValue: false},
-        dateDeleted: DataTypes.DATE,
         gender: DataTypes.STRING,
-        address: DataTypes.STRING,
         maritalStatus: DataTypes.STRING,
         acceptedTerms: { type: DataTypes.BOOLEAN, defaultValue: false},
+        bvn: DataTypes.STRING,
+        nin: DataTypes.STRING,
+        pics: DataTypes.STRING,
+        token: DataTypes.STRING,
+        tokenCreatedAt: DataTypes.DATE,
+        attemptCount: DataTypes.INTEGER,
+        timeLocked: DataTypes.DATE,
+        accountLocked: DataTypes.BOOLEAN,
         numbers: DataTypes.ARRAY(DataTypes.STRING),
         emails: DataTypes.ARRAY(DataTypes.STRING),
         verifiedNumbers:{
@@ -37,46 +45,23 @@ module.exports = (sequelize, DataTypes) => {
             type: DataTypes.ARRAY(DataTypes.STRING),
             defaultValue: []
         },
-        phoneNumber: DataTypes.STRING,
-        businessName: DataTypes.STRING,
-        accountType: DataTypes.STRING,
-        organization: DataTypes.STRING,
-        bussinessAddress: DataTypes.STRING,
-        bvn: DataTypes.STRING,
-        description: DataTypes.STRING,
-        designation: DataTypes.STRING,
-        token: DataTypes.STRING,
-        tokenCreatedAt: DataTypes.DATE,
-        attemptCount: DataTypes.INTEGER,
-        timeLocked: DataTypes.DATE,
-        accountLocked: DataTypes.BOOLEAN,
-        loginMethod: {type: DataTypes.STRING, defaultValue: 'email'},
         status: { 
             type: DataTypes.STRING, 
             defaultValue: 'inactive',
             values : ['inactive', 'active', 'blocked', 'disabled']
         },
         isActive: { type: DataTypes.BOOLEAN, defaultValue: false },
-        dateCreated: {type: DataTypes.DATE, defaultValue: DataTypes.NOW},
         lastLogin: DataTypes.DATE,
-        createdBySelf: {type: DataTypes.BOOLEAN,  defaultValue: true},
-        users: {type: DataTypes.ARRAY(DataTypes.UUID), defaultValue: []},
+        type: { type: DataTypes.STRING, defaultValue: 'user' },
         password: {
             type: DataTypes.STRING,
             allowNULL: false,
             validate:{len: [8, 64]}
         },
+        deleted: { type: DataTypes.BOOLEAN, defaultValue: false},
+        dateDeleted: DataTypes.DATE,
     },
     {
-        instanceMethods: {
-            checkPassword : async function(password){
-                return await bcrypt.compare(password, this.password);
-            },
-        
-            getFullname: function() {
-                return [this.firstname, this.lastname].join(' ');
-            }
-        },
         hooks: {
             beforeCreate: async function(user) {
                 if (!user.password ) return;
@@ -86,25 +71,23 @@ module.exports = (sequelize, DataTypes) => {
    
     });
 
-  
-    // User.associate = (models) => {
-    //     // User.hasMany(models.Loan, {
-    //     //     foreignKey: 'userId',
-    //     //     as: 'loans',
-    //     // });
-
-    //     User.belongsToMany(User, { as: 'Lender', foreignKey: 'lender', through: models.Loan });
-    //     User.belongsToMany(User, { as: 'User', foreignKey: 'userId', through: models.Loan });
-    // };
-    // User.associate = (models) => {
-    //     User.belongsTo(models.Loan, {
-    //         foreignKey: 'lender',
-    //         as: 'lends',
-    //     });
-    // };
     User.associate = (models) => {
-        User.belongsToMany(User, { as: 'Lender', foreignKey: 'lender', through: models.Loan });
-        User.belongsToMany(User, { as: 'User', foreignKey: 'userId', through: models.Loan });
+        User.hasOne(User, {as: 'creator'});
+        //contacts
+        // User.hasMany(models.Email, { foreignKey: 'userId' });
+
+        // User.hasMany(models.Phone, { foreignKey: 'userId' });
+        // User.belongsTo(models.Phone, { as: 'phoneNumber', constraints: false }); 
+        
+        User.hasMany(models.Address, { foreignKey: 'userId' });
+        User.belongsTo(models.Address, { as: 'currentAddress', constraints: false }); 
+
+        // cooperative
+        User.belongsToMany(models.Cooperative, { as: 'cooperative', through: 'CooperativeMember'});
+
+        // adashi
+        User.hasOne(models.Adashi, {as: 'initiator'});
+        User.belongsToMany(models.Adashi, { as: 'adashi', through: 'AdashiParticipant' });
 
         User.hasMany(models.ActivityLog, { foreignKey: 'userId' });
         User.hasMany(models.Token, {
@@ -112,10 +95,6 @@ module.exports = (sequelize, DataTypes) => {
             as: 'tokens',
         });
 
-        User.hasMany(models.UserConfig, {
-            foreignKey: 'userId',
-            as: 'configs',
-        });
     };
 
     User.generateToken = async (user) => {
@@ -123,10 +102,10 @@ module.exports = (sequelize, DataTypes) => {
         await user.save();
         return user.token;
     };
-    User.prototype.checkPassword  = async function(password){
+    User.prototype.checkPassword  = async (password) => {
         return await bcrypt.compare(password, this.password);
     };
-    User.prototype.setNewPassword  = async function(password){
+    User.prototype.setNewPassword  = async (password) => {
         this.password = await bcrypt.hash(password, 8);
         this.save();
     };

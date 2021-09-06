@@ -16,6 +16,11 @@ function phoneNumberValidator(num){
     let re = /\+1?\d{9,15}$/;
     return re.test(num);
 } 
+function emailValidator(num){
+    let re = /.*@.*\..*$/;
+    return re.test(num);
+} 
+
 
 function returnOnlyArrayProperties(obj, array, model){
     let newObj = {};

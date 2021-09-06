@@ -4,6 +4,7 @@ const logger = require('../../config/winston');
 const category = 'Winston Service';
 const db = require('../../server/models');
 const Logs = db.ActivityLog;
+const testEnv = process.env.NODE_ENV === 'test';
 
 const logObj = {
     action: 'Logger',
@@ -17,6 +18,8 @@ class WinstonLogger {
     }
 
     async error (err, meta){
+        console.log(err, testEnv);
+        if (testEnv) return;
         try {
             let message;
             if (!meta) meta = {};
@@ -65,6 +68,7 @@ class WinstonLogger {
     }
 
     async log (level, message, meta){
+        if (testEnv) return;
         try {
             if (!meta) meta = {};
             meta.category = meta.category ? meta.category : this.category;

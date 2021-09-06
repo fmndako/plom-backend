@@ -21,13 +21,25 @@ class UserService {
             throw new Error(e);
         }
     }
+    async getRegisteredUsers (type, value, userType, others) {
+        try {
+            let email = {};
+            email[type] = value;
+            let emails = {};
+            emails[type === 'email'? 'emails': 'numbers'] = {[Op.contains] : [value]};
+            let qlist = [email, emails];
+            let query = {[Op.or] : qlist};
+            query.deleted = {[Op.ne]: true};
+            query.type = userType;
+            if (others) query = {...query, ...others};
+            return await User.findAll({where: query, attributes: db.attributes.user, order: [['createdAt', 'DESC']]});
+        } catch (e) {
+            throw new Error(e);
+        }
+    }
     async createUser (body) {
         try{
-            // console.log(body);
-            body.verifiedEmails = [];
-            body.verifiedNumbers = [];
-            let user = await User.create(body);  
-            return returnOnlyArrayProperties(user, db.attributes.user, true);     
+            return await User.create(body);  
         }
         catch(err){
             throw new Error(err);
@@ -54,8 +66,8 @@ class UserService {
 
     async verifyUser(value, password){
         let user;
-        user = await User.findAll({where: {deleted: {[Op.ne]: true}, email: value, loginMethod: {[db.Sequelize.Op.ne]: 'phoneNumber'}}} );
-        if(user.length < 1) user = await User.findAll({where: {deleted: {[Op.ne]: true}, phoneNumber: value, loginMethod: 'phoneNumber'}} );
+        user = await User.findAll({where: {deleted: {[Op.ne]: true}, email: value, type: 'user'}} );
+        if(user.length < 1) user = await User.findAll({where: {deleted: {[Op.ne]: true}, phoneNumber: value, type: 'user'}} );
         if (user.length < 1) {
             throw new Error('Invalid username or password');
         }

@@ -32,10 +32,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Config.associate = (models) => {
-        Config.belongsTo(models.User, {
-            foreignKey: 'userId',
-            onDelete: 'CASCADE',
-        });
+       
     };
     return Config;
 };
