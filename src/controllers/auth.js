@@ -165,11 +165,11 @@ class UserController {
             let oldPassword = req.body.oldPassword;
             let newPassword = req.body.newPassword;
             if (!oldPassword || !newPassword) return res.processError(400, 'All fields are required');
-            let results = await req.user.checkPassword(oldPassword);
+            let results = await req.user.checkPassword(oldPassword, req.user.password);
             if (!results) return res.processError(400, 'Invalid password');
             let valid = await checkPassword(newPassword);
             if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
-            req.user.setNewPassword(newPassword);
+            req.user.setNewPassword(newPassword, req.user);
             logger.success('Change password', {userId: req.user.id});
             res.send({detail: 'Successfully change password'});
         } catch (error) {
@@ -180,7 +180,7 @@ class UserController {
         try {
             let email = req.body.email ? req.body.email : req.user.email;
             if(!email) return res.processError(400, 'Enter a valid email request');
-            let user = await UserService.getRegisteredUsers({email:email});
+            let user = await UserService.getRegisteredUsers('email', email, 'user');
             if (user && user.length < 1) return res.processError(400, 'user does not exist');
             user = user[0];
             let url = frontendUrl;
@@ -214,13 +214,13 @@ class UserController {
             let valid = checkPassword(password);
             if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
             let id = req.body.userId;
-            if(!password || !id) throw Error();
+            if(!password || !id) throw Error('Passowr or id cannot be null');
             let user = await UserService.getUser(id);
             if (!user ) return res.processError(400, 'User does not exist');
             user.verifyOtp = await OTPUtils.getOtps({userId: id});
             let userOtp = user.verifyOtp.filter(o => o.type === 'password-reset');
             if (userOtp.length < 0 && !userOtp.verified) return res.processError(400, 'Invalid request, Error setting new password');
-            await user.setNewPassword(password);
+            await user.setNewPassword(password, user);
             return res.send({detail: 'New password successfully set'});
         } catch (error) {
             res.processError(400, 'Error setting new password');

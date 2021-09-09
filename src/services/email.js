@@ -42,6 +42,7 @@ class Email {
                 text: escapeHtml(mailContent),
                 html: mailContent
             };
+            if (process.env.NODE_ENV === 'test') return resolve('success');
             return transporter.sendMail(mailOptions, function(error, status) {
                 if (error) {
                     reject(error);

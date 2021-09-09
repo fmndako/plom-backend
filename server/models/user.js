@@ -102,12 +102,12 @@ module.exports = (sequelize, DataTypes) => {
         await user.save();
         return user.token;
     };
-    User.prototype.checkPassword  = async (password) => {
-        return await bcrypt.compare(password, this.password);
+    User.prototype.checkPassword  = async (password, oldPassword) => {
+        return await bcrypt.compare(password, oldPassword);
     };
-    User.prototype.setNewPassword  = async (password) => {
-        this.password = await bcrypt.hash(password, 8);
-        this.save();
+    User.prototype.setNewPassword  = async (password, user) => {
+        user.password = await bcrypt.hash(password, 8);
+        await user.save();
     };
 
     return User;
