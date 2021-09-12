@@ -109,6 +109,8 @@ async function createLoan(req, res) {
             body.dateRequested = new Date();
             body.type = 'Borrow';
         }
+        if (body.repaymentOptionType === 'once' && !body.dateToRepay) throw 'Repayment date is required';
+        if (body.repaymentOptionType === 'several' && !body.repaymentOptions) throw 'Repayment options is required';
         let loan = await db.Loan.create(body);
         loan.dataValues.Lender = lender;
         if(!res) return loan;
@@ -118,7 +120,7 @@ async function createLoan(req, res) {
     } 
     catch(error){
         if(!res) throw error;
-        res.processError(400, 'Error creating loan', error);
+        res.processError(400, typeof error === 'string'? error : 'Error creating loan', error);
     }
 }
 async function deleteLoan(req, res) {

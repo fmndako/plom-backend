@@ -17,8 +17,17 @@ module.exports = (sequelize, DataTypes) => {
         },
         amount: DataTypes.INTEGER,
         date: DataTypes.DATE,
+        dateToRepay: DataTypes.DATE,
         remarks: DataTypes.STRING,
-        isRepaymentOption: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // added on creating loan
+        isRepaymentOption: {type: DataTypes.BOOLEAN,  defaultValue: false,},
+        addedBy: {
+            type: DataTypes.UUID,
+            foreignKey: true,
+            references: {
+                model: 'User',
+                key: 'id'
+            }
+        }, // added on creating loan
     });
 
     Offset.associate = (models) => {
