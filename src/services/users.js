@@ -4,7 +4,7 @@ const db = require('../../server/models/index');
 const Op = db.Sequelize.Op;
 let User = db.User;
 const bcrypt = require('bcryptjs');
-const { returnOnlyArrayProperties } = require('../../utilities/helpers');
+const { returnOnlyArrayProperties } = require('../utilities/helpers');
 
 class UserService {
     async getUser (userId) {
@@ -26,7 +26,7 @@ class UserService {
             let email = {};
             email[type] = value;
             let emails = {};
-            emails[type === 'email'? 'emails': 'numbers'] = {[Op.contains] : [value]};
+            emails[type === 'email'? 'emails': 'numbers'] = {[Op.iLike] : value};
             let qlist = [email, emails];
             let query = {[Op.or] : qlist};
             query.deleted = {[Op.ne]: true};

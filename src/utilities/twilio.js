@@ -1,4 +1,4 @@
-const winston = require('../src/services/winston');
+const winston = require('../services/winston');
 const logger = new winston('Message Controller');
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const phoneNumber = process.env.TWILIO_NUMBER;

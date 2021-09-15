@@ -1,7 +1,7 @@
 'use strict';
-const winston = require('../src/services/winston');
+const winston = require('../services/winston');
 const logger = new winston('OTP Verification');
-const db = require('./../server/models');
+const db = require('../../server/models');
 let Otp = db.Token;
 
 

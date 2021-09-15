@@ -36,8 +36,8 @@ module.exports = (sequelize, DataTypes) => {
         duration: DataTypes.JSONB, // notify and reminder date {days before} number of days before and once, on every day 
         dateToRepay: DataTypes.DATE,
         dateCleared: DataTypes.DATE,
-        repaymentOption: DataTypes.STRING,
-        options: DataTypes.JSONB,
+        repaymentType: DataTypes.STRING,
+        repaymentOptions: DataTypes.JSONB,
         security: DataTypes.STRING,
         urgency: DataTypes.STRING,
         status: DataTypes.STRING,
@@ -49,6 +49,7 @@ module.exports = (sequelize, DataTypes) => {
         deleted: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
         lenderDeleted: {type: DataTypes.BOOLEAN,  defaultValue: false,}, // lender clears
         dateConfirmed: DataTypes.DATE,
+        //add approver (for cooperatives)
     }); 
 
 

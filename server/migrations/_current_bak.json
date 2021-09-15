@@ -606,12 +606,12 @@
                     "field": "dateCleared",
                     "seqType": "Sequelize.DATE"
                 },
-                "repaymentType": {
-                    "field": "repaymentType",
+                "repaymentOption": {
+                    "field": "repaymentOption",
                     "seqType": "Sequelize.STRING"
                 },
-                "repaymentOptions": {
-                    "field": "repaymentOptions",
+                "options": {
+                    "field": "options",
                     "seqType": "Sequelize.JSONB"
                 },
                 "security": {
@@ -715,25 +715,12 @@
                     "onUpdate": "CASCADE",
                     "seqType": "Sequelize.UUID"
                 },
-                "parent": {
-                    "foreignKey": true,
-                    "references": {
-                        "model": "Offsets",
-                        "key": "id"
-                    },
-                    "field": "parent",
-                    "seqType": "Sequelize.UUID"
-                },
                 "amount": {
                     "field": "amount",
                     "seqType": "Sequelize.INTEGER"
                 },
                 "date": {
                     "field": "date",
-                    "seqType": "Sequelize.DATE"
-                },
-                "dateToRepay": {
-                    "field": "dateToRepay",
                     "seqType": "Sequelize.DATE"
                 },
                 "remarks": {
@@ -1043,19 +1030,27 @@
                 },
                 "numbers": {
                     "field": "numbers",
-                    "seqType": "Sequelize.STRING"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "emails": {
                     "field": "emails",
-                    "seqType": "Sequelize.STRING"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "verifiedNumbers": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.Array"
+                    },
                     "field": "verifiedNumbers",
-                    "seqType": "Sequelize.STRING"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "verifiedEmails": {
+                    "defaultValue": {
+                        "internal": true,
+                        "value": "Sequelize.Array"
+                    },
                     "field": "verifiedEmails",
-                    "seqType": "Sequelize.STRING"
+                    "seqType": "Sequelize.ARRAY(Sequelize.STRING)"
                 },
                 "status": {
                     "defaultValue": {
@@ -1128,5 +1123,5 @@
             "indexes": []
         }
     },
-    "revision": 2
+    "revision": 1
 }

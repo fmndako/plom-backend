@@ -4,28 +4,34 @@ const winston = require('../../services/winston');
 const db = require('../../../server/models');
 const Op = db.Sequelize.Op;
 const logger = new winston('User Management');
-const { phoneNumberValidator } = require('../../../utilities/helpers');
+const { isValidEmail, isValidPhoneNumber } = require('../../utilities/helpers');
 
 
 class UserController{
     async createLoanUser(req, res) {
         try {
             let {emails, firstName, numbers, lastName} = req.body;
-            if ( !firstName ) return res.processError(400, 'Invalid request, all fields are required');
+            if ( !firstName && (!numbers && !emails) ) return res.processError(400, 'first name and email or phone number are required');
             let body = {emails, numbers, firstName, lastName};
             if (typeof body.emails === 'string') body.emails = JSON.parse(body.emails);
             if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
             let query = {creatorId: req.user.id};
+            let userEmails = '';
+            let userNumbers = '';
             for (let n of body.emails){
-                // if  (!phoneNumberValidator(n))return res.processError('400', 'Invalid emails');
+                if  (!isValidEmail(n))return res.processError('400', 'Invalid emails');
                 let users = await UserService.getRegisteredUsers('email', n, 'private', query);
                 if (users.length > 0) return res.processError(400, 'User with email already exist, use the search function instead');
+                userEmails = `${userEmails ? userEmails + ',': ''}${n}`;
             }
             for (let n of body.numbers){
-                if  (!phoneNumberValidator(n)) return res.processError('400', 'Invalid phone number');
+                if  (!isValidPhoneNumber(n)) return res.processError('400', 'Invalid phone number');
                 let users = await UserService.getRegisteredUsers('phoneNumber', n, 'private', query);
                 if (users.length > 0) return res.processError(400, 'User with phone number already exist, use the search function instead');
+                userNumbers = `${userNumbers ? userNumbers + ',': ''}${n}`;
             }
+            body.numbers = userNumbers;
+            body.emails = userEmails;
             body.type = 'private';
             let user = await UserService.createUser(body);
             if (!user) return res.processError(400, 'Error creating user');
@@ -46,12 +52,12 @@ class UserController{
             if (typeof body.numbers=== 'string') body.numbers = JSON.parse(body.numbers);
             let query = {creatorId: req.user.id, id: {[Op.ne]: req.params.id}};
             for (let n of body.emails){
-                // if  (!phoneNumberValidator(n))return res.processError('400', 'Invalid emails');
+                // if  (!isValidPhoneNumber(n))return res.processError('400', 'Invalid emails');
                 let users = await UserService.getRegisteredUsers('email', n, 'private', query);
                 if (users.length > 1) return res.processError(400, 'User with email already exist, use the search function instead');
             }
             for (let n of body.numbers){
-                if  (!phoneNumberValidator(n)) return res.processError('400', 'Invalid phone number');
+                if  (!isValidPhoneNumber(n)) return res.processError('400', 'Invalid phone number');
                 let users = await UserService.getRegisteredUsers('phoneNumber', n, 'private', query );
                 if (users.length > 1) return res.processError(400, 'User with phone number already exist, use the search function instead');
             }
@@ -97,18 +103,25 @@ class UserController{
 
     async searchUser(req, res) {
         try {
-            let { page, limit, startDate, skipData, limitData,  } = req.processReq();
-            let params = req.query.params;
+            let { page, limit} = req.processReq();
+            let params = req.query.query;
+            if(!params) throw 'Search words cannot be empty';
             let search = `%${params}%`;
             let others = [ 
                 { email: {[Op.iLike]: search}},
                 { phoneNumber: {[Op.iLike]: search}},
-                { verifiedEmails:  {[Op.contains]: [search]}},
-                { verifiedNumbers: {[Op.contains]: `${search}`}}
+                {[Op.and]: [{ emails:  {[Op.iLike]: search}}, {type: 'user'}]},
+                {[Op.and]: [{ numbers:  {[Op.iLike]: search}}, {type: 'user'}]},
             ];        
             let query = {};
             query.deleted = {[Op.ne]: true};
-            query.createdBySelf = true;
+            query.id = {[Op.ne] : req.user.id};
+            if(!req.query.request) {
+                others = others.concat([
+                    {[Op.and]: [{ emails:  {[Op.iLike]: search}}, {type: 'private'}, {creatorId: req.user.id}]},
+                    {[Op.and]: [{ numbers:  {[Op.iLike]: search}}, {type: 'private'}, {creatorId: req.user.id}]},
+                ]);
+            }
             query[Op.or] = others;
             let user = await db.User.findAndCountAll({where: query});
             res.paginateRes(user, page, limit );

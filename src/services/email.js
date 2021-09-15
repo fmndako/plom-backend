@@ -28,7 +28,7 @@ const transporter = nodemailer.createTransport(options);
 
 class Email {
     /*Main Sending function. Uses Nodemailer and AWS SES to send emails. Handlebars is used to compile templates.*/
-    sendEmail(email, payload, mailContent, ) {
+    sendEmail(email, payload, mailContent, user ) {
         return new Promise((resolve, reject) => {
             
             let toArr = typeof email === 'string' ? [email] : email;
@@ -46,9 +46,10 @@ class Email {
             return transporter.sendMail(mailOptions, function(error, status) {
                 if (error) {
                     reject(error);
-                    logger.error('Error sending mail', {error});
+                    logger.error('Error sending mail', {error, userId: user.id});
                 } else {
-                    logger.info('email sent successful');
+                    logger.info('email sent successful', {userId: user.id});
+                    // mailModel.save(mailOptions);
                     return resolve('success');
                 }
             });

@@ -11,7 +11,7 @@ const route = require('./src/routes/routes');
 const winston = require('./src/services/winston');
 const logger = new winston('Server logs');
 const {resProcessor, reqProcessor} = require('./src/middleware/processor');
-require('./utilities/prototypes');
+require('./src/utilities/prototypes');
 const exphbs  = require('express-handlebars');
 
 app.engine('handlebars', exphbs());

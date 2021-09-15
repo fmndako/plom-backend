@@ -17,6 +17,7 @@ module.exports = {
             firstName: 'Admin',
             lastName: 'Admin',
             type: 'user',
+            phoneNumber: '+15478933216623',
             id: v4()
         }]);
     },

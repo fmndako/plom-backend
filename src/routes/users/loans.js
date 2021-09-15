@@ -16,6 +16,8 @@ router.post('/', LoanController.createLoan);
 
 router.post('/request', LoanController.requestLoan);
 
+router.get('/request', LoanController.getRequests);
+
 router.post('/request/:id/:type', LoanController.approveLoan); // in app approval
 
 router.delete('/request/:id', LoanController.deleteRequest);

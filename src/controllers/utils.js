@@ -1,4 +1,4 @@
-const currency = require('../../utilities/currency');
+const currency = require('../utilities/currency');
 
 class Utilities {
     getCurrencies(req, res){

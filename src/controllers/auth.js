@@ -1,21 +1,22 @@
 
 'use strict';
+const appRoot = require('app-root-path');
+const Handlebars = require('express-handlebars').create();
+const jwt = require('jsonwebtoken');
+
 const db = require('../../server/models');
 const Op = db.Sequelize.Op;
 const winston = require('../services/winston');
 const logger = new winston('User Management');
 const EmailService = require('../services/email');
-const OTPUtils = require('../../utilities/otp-verifcation');
-const appRoot = require('app-root-path');
+const OTPUtils = require('../utilities/otp-verifcation');
 const defaultTemplates = require(appRoot + '/templates');
-const Handlebars = require('express-handlebars').create();
-const jwt = require('jsonwebtoken');
-const { returnOnlyArrayProperties, phoneNumberValidator, checkPassword } = require('../../utilities/helpers');
+const { returnOnlyArrayProperties, isValidPhoneNumber, checkPassword } = require('../utilities/helpers');
 let signupEmailTemplate = defaultTemplates.signup;
 let passwordEmailTemplate = defaultTemplates.password;
 const frontendUrl = process.env.FRONTEND_URL;
 const UserService = require('../services/users');
-const Message = require('../../utilities/twilio');
+const Message = require('../utilities/twilio');
 
 
 class UserController {
@@ -25,7 +26,7 @@ class UserController {
             if (!email || !password || !firstName || !lastName || !phoneNumber) return res.processError(400, 'Invalid request, all fields are required');
             let valid = checkPassword(password);
             if(!valid) return res.processError(400, 'Password must be minimum of 8 characters, contain both lower and upper case, number and special characters');
-            valid = phoneNumberValidator(phoneNumber);
+            valid = isValidPhoneNumber(phoneNumber);
             if(!valid) return res.processError(400, 'Phone numbers must be entered in the format: +999999999. Up to 15 digits allowed.');
             let body = {email, password, firstName, lastName, phoneNumber};
             // body.numbers = req.body.numbers;
@@ -112,7 +113,7 @@ class UserController {
             let user = await UserService.getUser(req.user.id);
             if (!user) return res.processError(400, 'User does not exist');
             let phone = req.body.phone || user.phoneNumber;
-            let valid = phoneNumberValidator(phone);
+            let valid = isValidPhoneNumber(phone);
             if(!valid) return res.processError(400, 'Phone number must be entered in the format: +999999999. Up to 15 digits allowed.');
             let otp = await OTPUtils.saveOTP(user, 'phone', true, phone);
             _sendPhoneVerificationCode(user, otp, 'verifyPhone');

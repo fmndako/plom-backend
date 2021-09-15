@@ -7,7 +7,7 @@
     "db:drop": "sequelize db:drop",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "pretest": "eslint ./src --fix",
+    "pretest": "eslint ./src ./server ./tests --fix",
     "test": "cross-env NODE_ENV=test jest  --forceExit --detectOpenHandles --testTimeout=10000 --runInBand",
     "posttest": "cross-env NODE_ENV=test npm run db:drop",
     "db:create:test": "cross-env NODE_ENV=test npx sequelize-cli db:create",

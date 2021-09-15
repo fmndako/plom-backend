@@ -35,16 +35,10 @@ module.exports = (sequelize, DataTypes) => {
         attemptCount: DataTypes.INTEGER,
         timeLocked: DataTypes.DATE,
         accountLocked: DataTypes.BOOLEAN,
-        numbers: DataTypes.ARRAY(DataTypes.STRING),
-        emails: DataTypes.ARRAY(DataTypes.STRING),
-        verifiedNumbers:{
-            type: DataTypes.ARRAY(DataTypes.STRING),
-            defaultValue: []
-        },
-        verifiedEmails: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-            defaultValue: []
-        },
+        numbers: DataTypes.STRING,
+        emails: DataTypes.STRING,
+        verifiedNumbers: DataTypes.STRING,
+        verifiedEmails: DataTypes.STRING,
         status: { 
             type: DataTypes.STRING, 
             defaultValue: 'inactive',
@@ -84,6 +78,7 @@ module.exports = (sequelize, DataTypes) => {
 
         // cooperative
         User.belongsToMany(models.Cooperative, { as: 'cooperative', through: 'CooperativeMember'});
+        // Cooperative.belongsTo(models.User, { as: 'user', foreignKey: 'userId'}); 
 
         // adashi
         User.hasOne(models.Adashi, {as: 'initiator'});

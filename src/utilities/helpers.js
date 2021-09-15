@@ -12,13 +12,13 @@ function checkPassword(str){
     let re = /^(?=.*\d)(?=.*[!@#$%^'"&*])(?=.*[a-z])(?=.*[A-Z]).{8,}$/;
     return re.test(str);
 }
-function phoneNumberValidator(num){
+function isValidPhoneNumber(num){
     let re = /\+1?\d{9,15}$/;
     return re.test(num);
 } 
-function emailValidator(num){
-    let re = /.*@.*\..*$/;
-    return re.test(num);
+function isValidEmail(email){
+    let re = /^[a-z]+.*@[a-z].*\.[a-z]+$/;
+    return re.test(email);
 } 
 
 
@@ -44,5 +44,5 @@ function sumArray(array, key){
 module.exports = {
     removeArrayProperties,
     returnOnlyArrayProperties,
-    sumArray, checkPassword, phoneNumberValidator
+    sumArray, checkPassword, isValidPhoneNumber, isValidEmail
 };

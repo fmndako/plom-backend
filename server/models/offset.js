@@ -15,19 +15,19 @@ module.exports = (sequelize, DataTypes) => {
                 key: 'id'
             }
         },
+        parent: {
+            type: DataTypes.UUID,
+            foreignKey: true,
+            references: {
+                model: 'Offsets',
+                key: 'id'
+            }
+        },
         amount: DataTypes.INTEGER,
         date: DataTypes.DATE,
         dateToRepay: DataTypes.DATE,
         remarks: DataTypes.STRING,
         isRepaymentOption: {type: DataTypes.BOOLEAN,  defaultValue: false,},
-        addedBy: {
-            type: DataTypes.UUID,
-            foreignKey: true,
-            references: {
-                model: 'User',
-                key: 'id'
-            }
-        }, // added on creating loan
     });
 
     Offset.associate = (models) => {

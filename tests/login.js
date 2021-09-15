@@ -54,4 +54,4 @@ const getUserDetails = async () => {
 
 module.exports = {
     getUserDetails,
-}
+};

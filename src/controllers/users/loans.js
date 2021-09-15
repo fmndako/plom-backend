@@ -2,8 +2,8 @@ const Op = require('../../../server/models').Sequelize.Op;
 const db = require('../../../server/models');
 const winston = require('../../services/winston');
 const logger = new winston('Loan Management');
-const { returnOnlyArrayProperties, sumArray } = require('../../../utilities/helpers');
-const loanField = ['amount', 'type', 'notify', 'duration', 'options', 'userNotification', 'dateToRepay', 'dateTaken', 'repaymentOption','lender', 'remarks', 'option', 'duration', 'security'];
+const { returnOnlyArrayProperties, sumArray } = require('../../utilities/helpers');
+const loanField = ['amount', 'type', 'notify', 'duration', 'options', 'userNotification', 'dateToRepay', 'dateTaken', 'repaymentType','lender', 'remarks', 'repaymentOptions', 'duration', 'security'];
 const EmailService = require('../../services/email');
 const appRoot = require('app-root-path');
 const defaultTemplates = require(appRoot + '/templates');
@@ -21,7 +21,7 @@ async function getLoan(req, res) {
             ],});
         if(!loan) throw Error();
         if (!res) return loan;
-        processLoan(loan, req.user.id);
+        processLoan(loan, req.user.id, null, loan.isOwner(req.user.id));
         res.send(loan);
         
     }
@@ -54,7 +54,7 @@ async function getLoans(req, res) {
             ]}
             ]
         };
-        if (request === 'true'){
+        if (request === true){
             query.approvalStatus = {[Op.in]: ['pending', 'rejected']};
         } else {
             query.approvalStatus = {[Op.or]: [{[Op.eq]: null,}, {[Op.eq]: 'approved' }]}; 
@@ -109,14 +109,23 @@ async function createLoan(req, res) {
             body.dateRequested = new Date();
             body.type = 'Borrow';
         }
-        if (body.repaymentOptionType === 'once' && !body.dateToRepay) throw 'Repayment date is required';
-        if (body.repaymentOptionType === 'several' && !body.repaymentOptions) throw 'Repayment options is required';
+        if (!['once', 'several'].includes(body.repaymentType)) throw 'Select repayment type - once or several';
+        if (body.repaymentType === 'once' && !body.dateToRepay) throw 'Repayment date is required';
+        if (body.repaymentType === 'several' && !body.repaymentOptions) throw 'Repayment options is required';
+    
+        if (body.repaymentOptions
+            && body.repaymentOptions.custom  
+            && (!body.repaymentOptions.list || 
+                ( body.repaymentOptions.list && !body.repaymentOptions.list.length )))  
+            throw 'Repayment option custom list can not be empty';
+  
         let loan = await db.Loan.create(body);
         loan.dataValues.Lender = lender;
         if(!res) return loan;
         logger.success('Create Loan', {objectId: loan.id, userId:req.user.id});
-        res.send(loan);
         //await db.Loan.findAll({where: {userId: req.user.id}}));
+        req.params.id = loan.id;
+        return getLoan(req, res);
     } 
     catch(error){
         if(!res) throw error;
@@ -207,7 +216,7 @@ async function requestLoan(req, res) {
         await sendRequestMail(await getLoan({params: {id: loan.id}}));
         logger.success('Loan request sent', {objectId: loan.id, userId:req.user.id,});
         logger.success('Loan request received', {objectId: loan.id, userId:req.body.lender});
-        res.send(loan);
+        res.send({detail: 'Loan request sent successfully'});
     }
     catch(error){
         res.processError(400, 'Error requesting loan', error);
@@ -228,10 +237,10 @@ async function approveLoan(req, res) {
         // sendRequestMail(loan, loan.User.email, req.params.type, false);
         // sendRequestMail(loan, loan.Lender.email, req.params.type, true);
         logger.success(`${loan.approvalStatus} loan request`, {objectId: loan.id, userId:req.params.lender || req.user.id,});
-        res.send(loan);
+        res.send({detail: 'Loan request approved'});
     }
     catch(error){
-        res.processError(400, 'Error requesting loan', error);
+        res.processError(400, error, error);
     }
 }
 
@@ -264,6 +273,11 @@ async function deleteRequest(req, res) {
     catch(error){
         res.processError(400, 'Error deleting loan request', error);
     }
+}
+
+async function getRequests(req, res){
+    req.query.request = true;
+    return getLoans(req, res);
 }
 async function deleteOffset(req, res) {
     try{
@@ -298,20 +312,27 @@ async function processLoan(loan, id, reminderDays, isOwner){
     }
     let bal, status;
     if (!loan.cleared && loan.offsets && loan.offsets.length) bal = loan.amount - sumArray(loan.offsets, 'amount');
-    if(loan.cleared) status = 'Cleared';
-    else if (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
-        status = 'Due Soon';
-    } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
-        status = 'Due Today';
-    } else if (loan.dateToRepay < new Date().startOf('day')  ){
-        status = 'Over Due';
-    } else status = 'Active';
+    //status =  getLoanStatus(loan, reminderDays);
+    loan.dataValues.User.fullname = getUserNames(loan.dataValues.User);
+    loan.dataValues.Lender.fullname = getUserNames(loan.dataValues.Lender);
     loan.dataValues.status = status;
     loan.dataValues.bal = bal;
-    loan.dataValues.canClear = (isOwner && !loan.userCleared) || (!isOwner && !loan.lenderCleared);
-    loan.dataValues.canDelete = (isOwner && !loan.userDeleted) || (!isOwner && !loan.lenderDeleted);
-    loan.dataValues.canOffset = isOwner;
-    loan.dataValues.canEdit = isOwner;
+    loan.dataValues.isOwner = isOwner;
+    let isRequest = loan.dataValues.dateRequested;
+    let isLender = isRequest && !isOwner;
+    let isApproved = loan.dataValues.dateApproved;
+    let isPrivate = loan.Lender.type === 'private';
+    let isCoop = loan.Lender.type === 'coop';
+    loan.dataValues.isCoop = isCoop;
+    loan.dataValues.isRequested = isRequest;
+    loan.dataValues.isRequested = isRequest;
+    loan.dataValues.canDelete = isPrivate;
+    loan.dataValues.canEdit = isPrivate;
+    loan.dataValues.canCancel = isRequest && !isApproved;
+    loan.dataValues.canOffset =  isPrivate || (!isPrivate && isLender);
+    loan.dataValues.canClear = (isPrivate && !loan.userCleared) ||   (!isCoop && ((isOwner && !loan.userCleared) || (!isOwner && !loan.lenderCleared)));// || (isCoop && !loan.cleared);
+    // loan.dataValues.canMarkAsCompleted = isCoop && loan.status === 'cleared';
+    
 }
 
 function sendRequestMail(loan, email, type, self, cancelled){
@@ -341,10 +362,35 @@ function sendRequestMail(loan, email, type, self, cancelled){
         logger.error(error);
     }
 }
+
+function getLoanStatus(loan, reminderDays){
+    if (loan.repaymentType === 'once') {
+        let status;
+        if(loan.cleared) status = 'Cleared';
+        else if  (loan.dateToRepay <= new Date().addPeriod('Days', reminderDays).endOf('day') && loan.dateToRepay > new Date().endOf('day') ){
+            status = 'Due Soon';
+        } else if (loan.dateToRepay >= new Date().startOf('day') && loan.dateToRepay <= new Date().endOf('day')  ){
+            status = 'Due Today';
+        } else if (loan.dateToRepay < new Date().startOf('day')  ){
+            status = 'Over Due';
+        } else status = 'Active';
+        return status;
+    } else {
+        return 'In progress';
+
+
+    }    
+}
+function getUserNames(user){
+    if (user.type !== 'cooperative'){
+        return `${user.firstName} ${user.lastName}`;
+    } 
+    return 'Cooperative';
+}
 module.exports = {
     getLoan, getLoans, createLoan,
     deleteLoan, updateLoan, 
-    clearLoan, createOffset, requestLoan, 
+    clearLoan, createOffset, requestLoan, getRequests, 
     approveLoan, updateRequest, deleteRequest,  deleteOffset, updateOffset,
     processLoan
 };
