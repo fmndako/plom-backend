@@ -41,6 +41,5 @@ db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 db.attributes = {};
 db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive', 'type', 'numbers', 'verifiedNumbers', 'verifiedEmails','emails'];
-db.attributes.user = ['id', 'firstName', 'lastName', 'email', 'middleName', 'password', 'phoneNumber', 'isActive', 'type', 'numbers', 'verifiedNumbers', 'verifiedEmails','emails'];
 db.attributes.userShort = ['id', 'firstName', 'email', 'phoneNumber', 'lastName', 'numbers', 'emails', 'type'];
 module.exports = db;

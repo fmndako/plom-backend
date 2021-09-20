@@ -20,6 +20,8 @@ router.get('/request', LoanController.getRequests);
 
 router.post('/request/:id/:type', LoanController.approveLoan); // in app approval
 
+router.get('/request/:id/:type/:approverId', LoanController.approveLoan); // in mail app approval
+
 router.delete('/request/:id', LoanController.deleteRequest);
 
 router.put('/request/:id', LoanController.updateRequest);

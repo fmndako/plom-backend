@@ -97,9 +97,8 @@ class UserController {
             if (!user) return res.processError(400, 'User does not exist');
             let otp = await OTPUtils.saveOTP(user, 'email', true, user.email);
             let url = frontendUrl;
-            url = `${url}/verifyEmail/${user.id}/${otp}`;
-            _sendPhoneVerificationCode(user, otp, 'verifyPhone');
-
+            url = `${url}/verify-email?ref=${user.id}&token=${otp}`;
+            // _sendPhoneVerificationCode(user, otp, 'verifyPhone');
             _sendEmailVerificationMail(user, url, 'Email Verification');
             // user.save();
             logger.success('Request email verification', {userId: req.user.id});

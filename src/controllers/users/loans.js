@@ -20,12 +20,12 @@ async function getLoan(req, res) {
                 {model: db.User, as: 'Lender', attributes: db.attributes.userShort}, 
             ],});
         if(!loan) throw Error();
-        if (!res) return loan;
         processLoan(loan, req.user.id, null, loan.isOwner(req.user.id));
+        if (!res) return loan;
         res.send(loan);
-        
     }
     catch(error){
+        if (!res) throw 'Error getting loan';
         res.processError(400, 'Error retrieving loan', error);
     }
 }
@@ -101,7 +101,7 @@ async function createLoan(req, res) {
     try {
         let body = returnOnlyArrayProperties(req.body, loanField);
         body.userId = req.user.id;
-        if(!body.lender) throw 'Please enter user details';
+        if(!body. lender) throw 'Please enter user details';
         let lender = await db.User.findByPk(body.lender, {attributes: db.attributes.user,});
         if(!lender) throw 'lender cannot be null';
         if(!res) {
@@ -121,11 +121,11 @@ async function createLoan(req, res) {
   
         let loan = await db.Loan.create(body);
         loan.dataValues.Lender = lender;
-        if(!res) return loan;
-        logger.success('Create Loan', {objectId: loan.id, userId:req.user.id});
-        //await db.Loan.findAll({where: {userId: req.user.id}}));
+        
         req.params.id = loan.id;
-        return getLoan(req, res);
+        if(!res) return await getLoan(req);
+        logger.success('Create Loan', {objectId: loan.id, userId:req.user.id});
+        res.send({detail: 'Add loan successful'});
     } 
     catch(error){
         if(!res) throw error;
@@ -213,7 +213,7 @@ async function requestLoan(req, res) {
     try {
         
         let loan = await createLoan(req, null);
-        await sendRequestMail(await getLoan({params: {id: loan.id}}));
+        await sendRequestMail(loan, loan.Lender.email, true);
         logger.success('Loan request sent', {objectId: loan.id, userId:req.user.id,});
         logger.success('Loan request received', {objectId: loan.id, userId:req.body.lender});
         res.send({detail: 'Loan request sent successfully'});
@@ -227,30 +227,31 @@ async function approveLoan(req, res) {
     try {
         let query = {deleted:{[Op.ne]: true} , id: req.params.id};
         if(!req.user){
-            query.lender = req.params.lender;
+            query.lender = req.params.userId;
         } else query.lender = req.user.id; 
+        let lo = await getLoan(req);
         let loan = await db.Loan.findOne({where: query}); 
         if(!loan) throw 'Error, loan request not found';
         loan.approvalStatus = req.params.type;
         loan.approvalComments = req.body.remarks;
         await loan.save();
-        // sendRequestMail(loan, loan.User.email, req.params.type, false);
-        // sendRequestMail(loan, loan.Lender.email, req.params.type, true);
+        sendRequestMail(loan, loan.User.email, false, req.params.type, false);
+        sendRequestMail(loan, loan.Lender.email, false, req.params.type, true);
         logger.success(`${loan.approvalStatus} loan request`, {objectId: loan.id, userId:req.params.lender || req.user.id,});
-        res.send({detail: 'Loan request approved'});
+        res.send({detail: `Loan request ${loan.approvalStatus} sucessfully`});
     }
     catch(error){
         res.processError(400, error, error);
     }
 }
 
+
 async function updateRequest(req, res) {
     try {
-
         let loan = await updateLoan(req, null);
         //send notification to lender of loan request if not approved;
         logger.success('Loan request updated', {objectId: loan.id, userId:req.user.id,});
-        res.send(loan);
+        res.send({detail: 'Loan request updated successfully'});
     }
     catch(error){
         res.processError(400, 'Error requesting loan', error);
@@ -325,7 +326,6 @@ async function processLoan(loan, id, reminderDays, isOwner){
     let isCoop = loan.Lender.type === 'coop';
     loan.dataValues.isCoop = isCoop;
     loan.dataValues.isRequested = isRequest;
-    loan.dataValues.isRequested = isRequest;
     loan.dataValues.canDelete = isPrivate;
     loan.dataValues.canEdit = isPrivate;
     loan.dataValues.canCancel = isRequest && !isApproved;
@@ -335,20 +335,28 @@ async function processLoan(loan, id, reminderDays, isOwner){
     
 }
 
-function sendRequestMail(loan, email, type, self, cancelled){
+function sendRequestMail(loan, email, request, type, self, cancelled){
     try {
         let rejected = type === 'reject';
         let approved = type === 'approve';
+
         let rejectLink = `${process.env.BACKEND_URL}noauth/loans/request/${loan.id}/${loan.lender}/reject`;
         let approveLink = `${process.env.BACKEND_URL}noauth/loans/request/${loan.id}/${loan.lender}/approve`;
         let fullname = loan.User.firstName + ' ' + loan.User.lastName;
         let lender = loan.Lender.firstName + ' ' + loan.Lender.lastName;
         let variables = {
-            ...loan.dataValues, fullname, lender,...loan.Lender.dataValues,
+            ...loan.dataValues, fullname, lender, ...loan.User.dataValues,
             rejectLink,
+            // duration: `${loan.dataValues.duration.number} ${loan.dataValues.duration.period}`,
             approveLink,
             frontendUrl, 
-            self, rejected, approved, cancelled
+            self, 
+            rejected, 
+            request,  
+            approved, 
+            cancelled,
+            once: loan.repaymentType === 'once',
+            
         };
         let mailTemplate;
         mailTemplate = Handlebars._compileTemplate(requestEmailTemplate);
@@ -360,6 +368,7 @@ function sendRequestMail(loan, email, type, self, cancelled){
         return EmailService.sendEmail(email, payload, mailContent );
     } catch (error) {
         logger.error(error);
+        throw error;
     }
 }
 
@@ -391,6 +400,7 @@ module.exports = {
     getLoan, getLoans, createLoan,
     deleteLoan, updateLoan, 
     clearLoan, createOffset, requestLoan, getRequests, 
-    approveLoan, updateRequest, deleteRequest,  deleteOffset, updateOffset,
+    approveLoan,
+    updateRequest, deleteRequest,  deleteOffset, updateOffset,
     processLoan
 };

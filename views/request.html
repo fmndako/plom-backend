@@ -45,7 +45,7 @@
 			<p>This is a reminder that on {{requestDate}} you have received a request to approve the following trade.</p>
 			{{/if}} -->
 			{{#if request}}
-				Dear {{fullname }}
+				Dear {{ lender }}
 				<p>You have received a loan request, details below.</p>
 			{{/if}}
 			{{#if approved}}
@@ -64,12 +64,26 @@
 			{{/if}}
 			<table id='transactions' cellpadding="5px" valign="top" cellspacing="5px" border="0" class="wrapper" bgcolor="#FFFFFF">
 				<tbody >
-				<tr><td style='font-weight: bold'>Fullname:</td><td> {{lender}} </td></tr>
-				<tr><td style='font-weight: bold'>User email:</td><td>{{email}}</td></tr>
+				<tr><td style='font-weight: bold'>Fullname:</td><td> {{ fullname }} </td></tr>
+				<tr><td style='font-weight: bold'>User email:</td><td> {{ email }}</td></tr>
 				<tr><td style='font-weight: bold'>Request Date:</td><td>{{dateRequested}}</td></tr>
 				<tr><td style='font-weight: bold'>Amount:</td><td>{{amount}}</td></tr>
-				<tr><td style='font-weight: bold'>Security:</td><td>{{security}}</td></tr>
-				<tr><td style='font-weight: bold'>Repayment Options</td><td>{{repaymentOptions}}</td></tr>
+				<tr><td style='font-weight: bold'>Duration:</td><td>{{ duration.number }}</td></tr>
+				<tr><td style='font-weight: bold'>Repayment Type</td><td>{{repaymentType}}</td></tr>
+				{{#if once }}
+					<tr><td style='font-weight: bold'>Repayment Date</td><td> {{ dateToRepay }}</td></tr>
+				{{else}}
+					{{#if repaymentOptions.custom}}
+						{{#each repaymentOptions.list}}
+							<p>{{this.amount fullname}} rejected your loan request, details below.</p>
+						{{/each}}
+					{{else}}
+						<tr>
+							<td style='font-weight: bold'>Repayment Options</td>
+							<td> {{repaymentOptions.amount}} {{repaymentOptions.period}}  </td>
+						</tr>
+					{{/if}}
+				{{/if}}
 				<tr><td style='font-weight: bold'>Remarks</td><td>{{remarks}}</td></tr>
 				</tbody>
 			</table>
