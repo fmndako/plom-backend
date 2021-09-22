@@ -3,7 +3,6 @@ image: node:12.20.1
 stages:
   - deploy
   - npm
-  - test
 
 
 
@@ -12,6 +11,7 @@ npm:
   script:
     - npm config set registry ${CI_NPM_REGISTRY}
     - npm install
+    - npm run pretest
   cache:
     paths:
       - node_modules/
