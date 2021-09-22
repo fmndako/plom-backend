@@ -17,6 +17,7 @@ const exphbs  = require('express-handlebars');
 app.engine('handlebars', exphbs());
 app.set('view engine', 'handlebars');
 
+app.use(cors());
 
 // Parse the payload and add to request.body
 app.use(express.urlencoded({ extended: false }));
@@ -25,10 +26,9 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(morgan('combined', { stream: logger.stream }));
 app.use(resProcessor);
 app.use(reqProcessor);
-app.use(cors());
 app.get('/', async function(req, res) {
    
-    res.send('App works!!');
+    res.send('App works fine!!');
 
 });
 
